@@ -13,7 +13,9 @@ fetch → LLM-extraction → deterministic-comparison pipeline,
 project (a forex cross-rate oracle), and rebuilds every trust-sensitive
 control from scratch specifically for two-party sports-score agreements.
 
-**Contract:** not yet deployed — see "Deploying" below.
+**Contract:** deployed and live on GenLayer Studio at
+`0xd641d7E80A309Ba01D1D62f071873f69b2978C14` —
+[view on explorer](https://explorer-studio.genlayer.com/address/0xd641d7E80A309Ba01D1D62f071873f69b2978C14).
 
 ---
 
@@ -22,7 +24,7 @@ control from scratch specifically for two-party sports-score agreements.
 ```
 contract.py     the Intelligent Contract (GenLayer / GenVM, Python)
 index.html      the entire frontend — HTML/CSS/JS, no build step
-tests/          contract.py's offline test suite (153/153 passing)
+tests/          contract.py's offline test suite (165/165 passing)
 README.md
 LICENSE
 ```
@@ -73,9 +75,8 @@ Each entry can optionally pin a specific section of a domain too — e.g.
 `bbc.com/sport` narrows "any BBC page" down to "a page under BBC Sport
 specifically."
 
-Two further controls, added after steward review of the sibling forex
-project surfaced the same gaps there, close what a purely domain-level
-commitment leaves open:
+Two further controls close what a purely domain-level commitment leaves
+open:
 
 - **Locked voting set.** The exact `source_urls` submitted on the FIRST
   `resolve_agreement` attempt are locked into `locked_source_urls`. Every
@@ -152,14 +153,21 @@ the page is written with `textContent` / `document.createElement` only —
 `innerHTML` is never used anywhere in the file, so no value returned from
 the contract or fetched off-chain can ever be interpreted as markup.
 
-Before use, set `CONTRACT_ADDRESS` near the top of the `<script>` block to
-your deployed contract's address.
+`CONTRACT_ADDRESS` is already set to the deployed contract address above.
+
+**Live and verified:** the frontend is deployed at
+https://mary1270.github.io/scoresettle-dapp/ and has been tested against
+the live deployed contract on GenLayer Studio — connecting a test
+session, reading an existing agreement (parties, terms, status, and its
+full per-source evidence table), checking a role, and fetching the total
+agreement count all returned results matching the contract's actual
+on-chain state.
 
 ---
 
 ## Test suite
 
-153 offline `unittest` tests across four files, all passing:
+165 offline `unittest` tests across four files, all passing:
 
 - `test_party_binding_and_timing.py` — create/accept/cancel binding rules,
   deadline lead-time bounds, the 24h resolution window, `expire_agreement`,
@@ -190,14 +198,20 @@ requires GenLayer Studio or testnet.
 
 ## Deploying
 
-This package has not yet been deployed or pushed to GitHub. To take it
-live:
+This package is already deployed and live:
 
-1. Deploy `contract.py` via GenLayer Studio (or the CLI) to get a
+- **Contract:** `0xd641d7E80A309Ba01D1D62f071873f69b2978C14` on GenLayer
+  Studio — [explorer link](https://explorer-studio.genlayer.com/address/0xd641d7E80A309Ba01D1D62f071873f69b2978C14).
+- **Frontend:** https://mary1270.github.io/scoresettle-dapp/ (GitHub Pages,
+  `CONTRACT_ADDRESS` already pointed at the deployment above).
+
+To deploy your own instance instead:
+
+1. Deploy `contract.py` via GenLayer Studio (or the CLI) to get a new
    contract address.
-2. Set `CONTRACT_ADDRESS` in `index.html`.
-3. Push this repository to GitHub and enable GitHub Pages (or host
-   `index.html` anywhere static) for the frontend.
+2. Set `CONTRACT_ADDRESS` in `index.html` to that address.
+3. Push your copy of this repository to GitHub and enable GitHub Pages
+   (or host `index.html` anywhere static) for the frontend.
 4. Submit the repository + release to the GenLayer Portal.
 
 ---
