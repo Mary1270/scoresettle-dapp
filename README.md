@@ -1,6 +1,6 @@
 ![License](https://img.shields.io/badge/license-MIT-blue)
 ![GenLayer](https://img.shields.io/badge/GenLayer-genlayer--js-3E9B4F)
-![Tests](https://img.shields.io/badge/tests-165%2F165%20passing-3E9B4F)
+![Tests](https://img.shields.io/badge/tests-167%2F167%20passing-3E9B4F)
 
 # ScoreSettle
 
@@ -26,7 +26,7 @@ superseded by this one - see "Changelog" below.)
 ```
 contract.py     the Intelligent Contract (GenLayer / GenVM, Python)
 index.html      the entire frontend — HTML/CSS/JS, no build step
-tests/          contract.py's offline test suite (165/165 passing)
+tests/          contract.py's offline test suite (167/167 passing)
 README.md
 LICENSE
 ```
@@ -169,7 +169,7 @@ on-chain state.
 
 ## Test suite
 
-165 offline `unittest` tests across four files, all passing:
+167 offline `unittest` tests across four files, all passing:
 
 - `test_party_binding_and_timing.py` — create/accept/cancel binding rules,
   deadline lead-time bounds, the 24h resolution window, `expire_agreement`,
