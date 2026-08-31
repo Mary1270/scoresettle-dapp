@@ -240,15 +240,26 @@ class ResolveQualityFlagTests(unittest.TestCase):
 
 class ResolveSourceLockTests(unittest.TestCase):
     """
-    Covers the voting-source-set lock: the exact source_urls submitted
-    on the first resolve_agreement attempt are locked, and every later
-    attempt on the same agreement must resubmit that identical set.
+    Covers the voting-source-set lock: it activates only once an
+    attempt's fetched evidence actually clears quality (at least
+    MIN_INDEPENDENT_SOURCES real, fixture-matched, final, parsed
+    sources) - never merely because required_source_domains was
+    satisfied. This prevents any caller (resolve_agreement is
+    permissionless) from permanently poisoning an agreement by
+    submitting allowlisted-but-irrelevant pages first.
     """
 
     def setUp(self):
         self.c = make_contract()
 
-    def test_first_attempt_locks_source_set(self):
+    def _mixed_tie_content(self, url):
+        # espn.com reports a high-scoring final (-> "Above"); bbc.com
+        # reports a low-scoring final (-> "Below"). Both are real,
+        # fixture-matching, final evidence - so independent_source_count
+        # reaches 2, but the verdict ties out to "Indeterminate".
+        return FINAL_HIGH_SCORING_CONTENT if "espn.com" in url else FINAL_LOW_SCORING_CONTENT
+
+    def test_low_quality_first_attempt_does_not_lock(self):
         aid = create_and_accept(self.c, comparison="above")
         urls = ["https://espn.com/x", "https://bbc.com/sport/x"]
         with patch.object(
@@ -257,9 +268,47 @@ class ResolveSourceLockTests(unittest.TestCase):
             gl.nondet, "exec_prompt", side_effect=lambda p, response_format="text": llm_response_for(LIVE_IN_PROGRESS_CONTENT)
         ):
             result = json.loads(self.c.resolve_agreement(aid, urls))
-        self.assertEqual(sorted(u.lower() for u in result["locked_source_urls"]), sorted(u.lower() for u in urls))
+        self.assertEqual(result["independent_source_count"], 0)
+        self.assertIsNone(result["locked_source_urls"])
 
-    def test_locked_after_resolved_first_attempt_too(self):
+    def test_wrong_fixture_first_attempt_does_not_lock(self):
+        aid = create_and_accept(self.c, comparison="above")
+        urls = ["https://espn.com/x", "https://bbc.com/sport/x"]
+        with patch.object(
+            gl.nondet.web, "render", side_effect=lambda url, mode="text": WRONG_FIXTURE_CONTENT
+        ), patch.object(
+            gl.nondet, "exec_prompt", side_effect=lambda p, response_format="text": llm_response_for(WRONG_FIXTURE_CONTENT)
+        ):
+            result = json.loads(self.c.resolve_agreement(aid, urls))
+        self.assertIsNone(result["locked_source_urls"])
+
+    def test_retry_with_different_sources_allowed_after_low_quality_attempt(self):
+        # A low-quality first attempt must not trap the agreement into
+        # a dead source set - a different, better set must still be
+        # usable afterward.
+        aid = create_and_accept(self.c, comparison="above")
+        bad_urls = ["https://espn.com/x", "https://bbc.com/sport/x"]
+        with patch.object(
+            gl.nondet.web, "render", side_effect=lambda url, mode="text": LIVE_IN_PROGRESS_CONTENT
+        ), patch.object(
+            gl.nondet, "exec_prompt", side_effect=lambda p, response_format="text": llm_response_for(LIVE_IN_PROGRESS_CONTENT)
+        ):
+            self.c.resolve_agreement(aid, bad_urls)
+
+        different_urls = ["https://espn.com/y", "https://bbc.com/sport/y"]
+        with patch.object(
+            gl.nondet.web, "render", side_effect=lambda url, mode="text": FINAL_HIGH_SCORING_CONTENT
+        ), patch.object(
+            gl.nondet, "exec_prompt", side_effect=lambda p, response_format="text": llm_response_for(FINAL_HIGH_SCORING_CONTENT)
+        ):
+            result = json.loads(self.c.resolve_agreement(aid, different_urls))
+        self.assertEqual(result["status"], "resolved")
+        self.assertEqual(
+            sorted(u.lower() for u in result["locked_source_urls"]),
+            sorted(u.lower() for u in different_urls),
+        )
+
+    def test_high_quality_first_attempt_locks_source_set(self):
         aid = create_and_accept(self.c, comparison="above")
         urls = ["https://espn.com/x", "https://bbc.com/sport/x"]
         with patch.object(
@@ -269,50 +318,73 @@ class ResolveSourceLockTests(unittest.TestCase):
         ):
             result = json.loads(self.c.resolve_agreement(aid, urls))
         self.assertEqual(result["status"], "resolved")
-        self.assertIsNotNone(result["locked_source_urls"])
+        self.assertEqual(
+            sorted(u.lower() for u in result["locked_source_urls"]),
+            sorted(u.lower() for u in urls),
+        )
 
-    def test_retry_with_identical_source_set_allowed(self):
+    def test_retry_with_identical_source_set_allowed_after_lock(self):
         aid = create_and_accept(self.c, comparison="above")
         urls = ["https://espn.com/x", "https://bbc.com/sport/x"]
-        with patch.object(
-            gl.nondet.web, "render", side_effect=lambda url, mode="text": LIVE_IN_PROGRESS_CONTENT
-        ), patch.object(
-            gl.nondet, "exec_prompt", side_effect=lambda p, response_format="text": llm_response_for(LIVE_IN_PROGRESS_CONTENT)
-        ):
-            self.c.resolve_agreement(aid, urls)
-
-        # Retry with the EXACT same set (just reordered) - allowed.
         with patch.object(
             gl.nondet.web, "render", side_effect=lambda url, mode="text": FINAL_HIGH_SCORING_CONTENT
         ), patch.object(
             gl.nondet, "exec_prompt", side_effect=lambda p, response_format="text": llm_response_for(FINAL_HIGH_SCORING_CONTENT)
         ):
-            result = json.loads(self.c.resolve_agreement(aid, list(reversed(urls))))
-        self.assertEqual(result["status"], "resolved")
+            first = json.loads(self.c.resolve_agreement(aid, urls))
+        self.assertEqual(first["status"], "resolved")
 
-    def test_retry_with_different_source_set_rejected(self):
+        # Already resolved - a further call (even with the identical,
+        # locked set) correctly hits the "not open" guardrail rather
+        # than the lock check, since there's nothing left to resolve.
+        with self.assertRaises(gl.vm.UserError):
+            self.c.resolve_agreement(aid, list(reversed(urls)))
+
+    def test_retry_with_different_source_set_rejected_after_lock(self):
+        # Build a locking-but-still-open scenario: real evidence from
+        # both committed domains that disagrees (a genuine tie), which
+        # locks the set per the new rule while leaving status "open"
+        # for a retry attempt to be possible.
         aid = create_and_accept(self.c, comparison="above")
         urls = ["https://espn.com/x", "https://bbc.com/sport/x"]
-        with patch.object(
-            gl.nondet.web, "render", side_effect=lambda url, mode="text": LIVE_IN_PROGRESS_CONTENT
-        ), patch.object(
-            gl.nondet, "exec_prompt", side_effect=lambda p, response_format="text": llm_response_for(LIVE_IN_PROGRESS_CONTENT)
+
+        def fetch(url, mode="text"):
+            return FINAL_HIGH_SCORING_CONTENT if "espn.com" in url else FINAL_LOW_SCORING_CONTENT
+
+        def llm(prompt, response_format="text"):
+            if "goalless" in prompt:
+                return llm_response_for(FINAL_LOW_SCORING_CONTENT)
+            return llm_response_for(FINAL_HIGH_SCORING_CONTENT)
+
+        with patch.object(gl.nondet.web, "render", side_effect=fetch), patch.object(
+            gl.nondet, "exec_prompt", side_effect=llm
         ):
-            self.c.resolve_agreement(aid, urls)
+            first = json.loads(self.c.resolve_agreement(aid, urls))
+        self.assertEqual(first["status"], "open")
+        self.assertEqual(first["final_verdict"], "Indeterminate")
+        self.assertIsNotNone(first["locked_source_urls"])
 
         different_urls = ["https://espn.com/y", "https://bbc.com/sport/y"]
         with self.assertRaises(gl.vm.UserError):
             self.c.resolve_agreement(aid, different_urls)
 
-    def test_retry_adding_an_extra_source_rejected(self):
+    def test_retry_adding_an_extra_source_rejected_after_lock(self):
         aid = create_and_accept(self.c, comparison="above")
         urls = ["https://espn.com/x", "https://bbc.com/sport/x"]
-        with patch.object(
-            gl.nondet.web, "render", side_effect=lambda url, mode="text": LIVE_IN_PROGRESS_CONTENT
-        ), patch.object(
-            gl.nondet, "exec_prompt", side_effect=lambda p, response_format="text": llm_response_for(LIVE_IN_PROGRESS_CONTENT)
+
+        def fetch(url, mode="text"):
+            return FINAL_HIGH_SCORING_CONTENT if "espn.com" in url else FINAL_LOW_SCORING_CONTENT
+
+        def llm(prompt, response_format="text"):
+            if "goalless" in prompt:
+                return llm_response_for(FINAL_LOW_SCORING_CONTENT)
+            return llm_response_for(FINAL_HIGH_SCORING_CONTENT)
+
+        with patch.object(gl.nondet.web, "render", side_effect=fetch), patch.object(
+            gl.nondet, "exec_prompt", side_effect=llm
         ):
-            self.c.resolve_agreement(aid, urls)
+            first = json.loads(self.c.resolve_agreement(aid, urls))
+        self.assertIsNotNone(first["locked_source_urls"])
 
         with self.assertRaises(gl.vm.UserError):
             self.c.resolve_agreement(aid, urls + ["https://nba.com/x"])
@@ -320,21 +392,28 @@ class ResolveSourceLockTests(unittest.TestCase):
     def test_locked_source_set_case_and_whitespace_insensitive(self):
         aid = create_and_accept(self.c, comparison="above")
         urls = ["https://espn.com/x", "https://bbc.com/sport/x"]
-        with patch.object(
-            gl.nondet.web, "render", side_effect=lambda url, mode="text": LIVE_IN_PROGRESS_CONTENT
-        ), patch.object(
-            gl.nondet, "exec_prompt", side_effect=lambda p, response_format="text": llm_response_for(LIVE_IN_PROGRESS_CONTENT)
+
+        def fetch(url, mode="text"):
+            return FINAL_HIGH_SCORING_CONTENT if "espn.com" in url else FINAL_LOW_SCORING_CONTENT
+
+        def llm(prompt, response_format="text"):
+            if "goalless" in prompt:
+                return llm_response_for(FINAL_LOW_SCORING_CONTENT)
+            return llm_response_for(FINAL_HIGH_SCORING_CONTENT)
+
+        with patch.object(gl.nondet.web, "render", side_effect=fetch), patch.object(
+            gl.nondet, "exec_prompt", side_effect=llm
         ):
-            self.c.resolve_agreement(aid, urls)
+            first = json.loads(self.c.resolve_agreement(aid, urls))
+        self.assertIsNotNone(first["locked_source_urls"])
+        self.assertEqual(first["status"], "open")
 
         reshuffled_case = [" HTTPS://ESPN.COM/x ", "https://BBC.com/sport/x"]
-        with patch.object(
-            gl.nondet.web, "render", side_effect=lambda url, mode="text": FINAL_HIGH_SCORING_CONTENT
-        ), patch.object(
-            gl.nondet, "exec_prompt", side_effect=lambda p, response_format="text": llm_response_for(FINAL_HIGH_SCORING_CONTENT)
+        with patch.object(gl.nondet.web, "render", side_effect=lambda url, mode="text": fetch(url.lower(), mode)), patch.object(
+            gl.nondet, "exec_prompt", side_effect=llm
         ):
             result = json.loads(self.c.resolve_agreement(aid, reshuffled_case))
-        self.assertEqual(result["status"], "resolved")
+        self.assertEqual(result["final_verdict"], "Indeterminate")
 
     def test_unlocked_agreement_has_null_locked_source_urls(self):
         aid = create_and_accept(self.c, comparison="above")
