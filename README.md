@@ -14,8 +14,10 @@ project (a forex cross-rate oracle), and rebuilds every trust-sensitive
 control from scratch specifically for two-party sports-score agreements.
 
 **Contract:** deployed and live on GenLayer Studio at
-`0xd641d7E80A309Ba01D1D62f071873f69b2978C14` —
-[view on explorer](https://explorer-studio.genlayer.com/address/0xd641d7E80A309Ba01D1D62f071873f69b2978C14).
+`0xaeE8fA79C7d29429A6DAf67dACC494C13cc4Bc01` —
+[view on explorer](https://explorer-studio.genlayer.com/address/0xaeE8fA79C7d29429A6DAf67dACC494C13cc4Bc01).
+(A prior instance at `0xd641d7E80A309Ba01D1D62f071873f69b2978C14` is
+superseded by this one - see "Changelog" below.)
 
 ---
 
@@ -200,8 +202,8 @@ requires GenLayer Studio or testnet.
 
 This package is already deployed and live:
 
-- **Contract:** `0xd641d7E80A309Ba01D1D62f071873f69b2978C14` on GenLayer
-  Studio — [explorer link](https://explorer-studio.genlayer.com/address/0xd641d7E80A309Ba01D1D62f071873f69b2978C14).
+- **Contract:** `0xaeE8fA79C7d29429A6DAf67dACC494C13cc4Bc01` on GenLayer
+  Studio — [explorer link](https://explorer-studio.genlayer.com/address/0xaeE8fA79C7d29429A6DAf67dACC494C13cc4Bc01).
 - **Frontend:** https://mary1270.github.io/scoresettle-dapp/ (GitHub Pages,
   `CONTRACT_ADDRESS` already pointed at the deployment above).
 
@@ -213,6 +215,24 @@ To deploy your own instance instead:
 3. Push your copy of this repository to GitHub and enable GitHub Pages
    (or host `index.html` anywhere static) for the frontend.
 4. Submit the repository + release to the GenLayer Portal.
+
+---
+
+## Changelog
+
+**v1.0.1** - Fixed a griefing vector in the voting-source-set lock:
+previously `locked_source_urls` was fixed on the very first
+`resolve_agreement` call regardless of evidence quality. Since that
+method is permissionless, any caller could permanently poison an
+agreement by submitting allowlisted-but-irrelevant pages (wrong
+fixture, still-live score, unparseable content) before those pages
+ever had a chance to prove themselves. The lock now activates only
+once an attempt's fetched evidence actually clears quality - at least
+`MIN_INDEPENDENT_SOURCES` sources that are fixture-matched, explicitly
+FINAL, and parsed (`quality_flag == "ok"`) - regardless of whether the
+resulting verdict is a win, a loss, or a genuine tie among real
+evidence. See `tests/test_end_to_end.py`'s `ResolveSourceLockTests`
+for the full set of scenarios this covers.
 
 ---
 
