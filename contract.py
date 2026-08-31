@@ -57,15 +57,31 @@ class ScoreSettle(gl.Contract):
          single caller-chosen web page can never decide a settlement
          outcome. Two further controls close gaps a purely domain-
          level commitment leaves open:
-           - LOCKED VOTING SET: the exact source_urls submitted on the
-             FIRST resolve_agreement attempt are locked into
+           - LOCKED VOTING SET, LOCKED ONLY AFTER REAL EVIDENCE: the
+             exact source_urls submitted on the FIRST
+             resolve_agreement attempt whose fetched evidence actually
+             clears quality (at least MIN_INDEPENDENT_SOURCES sources
+             that fetched cleanly, matched the exact fixture, were
+             explicitly FINAL, and parsed) are locked into
              `locked_source_urls`; every later attempt on the same
-             agreement must resubmit that identical set or is
-             rejected before any fetch. Without this, a resolver could
-             keep retrying with a different combination of otherwise-
-             valid, committed-domain-satisfying URLs until one
-             particular combination happened to read favorably -
-             shopping for a result rather than corroborating one.
+             agreement must then resubmit that identical set or is
+             rejected before any fetch. Locking is deliberately staged
+             behind a quality check rather than happening on the
+             literal first call: `resolve_agreement` is permissionless
+             (anyone can call it, not just party_a/party_b), so
+             locking on the first call regardless of quality would let
+             any caller permanently poison an agreement by submitting
+             allowlisted-but-irrelevant pages (wrong fixture, still-
+             live score, unparseable content) before those pages ever
+             had a chance to prove themselves. Once real evidence
+             DOES clear the bar, the set still locks even on a
+             genuine tie/split verdict - that's legitimate
+             disagreement, not irrelevance, and locking it prevents a
+             resolver from quietly dropping a real dissenting source
+             on retry to break the tie in their favor. This closes the
+             same "shopping for a result" gap either way; it simply
+             ensures the thing getting locked is real evidence, not
+             noise.
            - ONE DOCUMENTED QUORUM RULE (see `_aggregate`): a verdict
              requires at least MIN_INDEPENDENT_SOURCES eligible,
              independent sources, and the winning category (Above /
@@ -1288,23 +1304,33 @@ class ScoreSettle(gl.Contract):
         source. Extra reputable domains beyond the committed set are
         still allowed (more corroboration is never harmful).
 
-        VOTING SOURCE SET IS LOCKED AT THE FIRST ATTEMPT. The first
-        call to resolve_agreement that passes the required-domains
-        check above fixes `locked_source_urls` to the EXACT set of
+        VOTING SOURCE SET IS LOCKED ONLY AFTER REAL EVIDENCE. The
+        required-domains check above only proves the submitted URLs
+        are on the right DOMAINS - it says nothing about whether they
+        actually cover the right fixture with a final score. Because
+        this method is PERMISSIONLESS (any address may call it, not
+        just party_a/party_b), locking on that check alone would let
+        any caller permanently poison an agreement by submitting
+        allowlisted-but-irrelevant pages (wrong fixture, still-live
+        score, unparseable content) before those pages ever had a
+        chance to prove themselves. So locking is staged one step
+        later: after the evidence is fetched and judged, if this
+        attempt is the first whose evidence includes at least
+        MIN_INDEPENDENT_SOURCES sources that are fetch-`ok`, non-
+        duplicate, reputable, AND quality_flag `"ok"` (fixture-
+        matched, explicitly FINAL, and parsed) - i.e. real evidence,
+        not noise - `locked_source_urls` is fixed to the EXACT set of
         source_urls submitted (order-independent, case/whitespace-
-        normalized for comparison). Every subsequent resolve_agreement
-        call on this same agreement - whether the first attempt
-        resolved or came back "Equal"/"Indeterminate" - MUST submit
-        that exact same set of URLs, or it is rejected before any
-        fetch. Without this, a resolver could keep calling
-        resolve_agreement with a different combination of (still
-        individually valid, still committed-domain-satisfying) URLs
-        until one particular combination happened to produce a
-        favorable verdict - effectively shopping for a result rather
-        than corroborating one. Locking the set removes that degree
-        of freedom entirely: retrying can only mean "try again because
-        a source was temporarily unreachable," never "try a different
-        set of pages."
+        normalized for comparison). This still locks on a genuine
+        tie/split verdict among real evidence (that's legitimate
+        disagreement, not irrelevance - locking it stops a resolver
+        from quietly dropping a real dissenting source on retry to
+        break the tie). Every subsequent resolve_agreement call on
+        this same agreement - once locked - MUST submit that exact
+        same set of URLs, or it is rejected before any fetch. If an
+        agreement's evidence never clears the quality bar before the
+        resolution window closes, it simply expires unresolved via
+        `expire_agreement` rather than staying poisoned forever.
 
         If the resulting final_verdict is "Equal" or "Indeterminate",
         the agreement remains "open" (winner stays "unresolved") and
@@ -1422,13 +1448,16 @@ class ScoreSettle(gl.Contract):
                 f"by the submitted sources."
             )
 
-        # Every validation this submitted set needs to pass has now
-        # passed. If this is the first attempt (nothing locked yet),
-        # lock this exact set for every future attempt on this
-        # agreement - see the docstring's "VOTING SOURCE SET IS
-        # LOCKED AT THE FIRST ATTEMPT" section.
-        if not locked_source_urls:
-            agreement["locked_source_urls"] = list(source_urls)
+        # NOTE: the voting set is intentionally NOT locked here yet.
+        # Satisfying required_source_domains only proves the submitted
+        # URLs are on the right DOMAINS - it says nothing about
+        # whether they actually cover the right fixture with a final
+        # score. Locking at this point would let ANY caller (this
+        # method is permissionless) permanently poison an agreement by
+        # submitting allowlisted-but-irrelevant pages first. See
+        # "VOTING SOURCE SET IS LOCKED ONLY AFTER REAL EVIDENCE" below
+        # for where the lock actually happens, once the fetched/judged
+        # evidence has been examined.
 
         teams = agreement["teams"]
         match_date = agreement["match_date"]
@@ -1592,6 +1621,39 @@ class ScoreSettle(gl.Contract):
         agreement["winner"] = result["winner"]
         agreement["independent_source_count"] = result["independent_source_count"]
         agreement["resolution_attempts"] = agreement.get("resolution_attempts", 0) + 1
+
+        # ------------------------------------------------------------
+        # VOTING SOURCE SET IS LOCKED ONLY AFTER REAL EVIDENCE.
+        #
+        # Only lock now, once the evidence has actually been examined
+        # - and only if it cleared the bar of "real": at least
+        # MIN_INDEPENDENT_SOURCES sources fetched cleanly, matched the
+        # exact fixture, were explicitly a FINAL score, and parsed
+        # (quality_flag == "ok" - this is exactly what
+        # independent_source_count counts). If a caller submitted
+        # allowlisted-but-irrelevant pages (wrong fixture, still-live
+        # score, unparseable content...), independent_source_count
+        # stays below the threshold and NOTHING is locked - the next
+        # attempt remains free to try different, better URLs.
+        #
+        # This is deliberately independent of final_verdict: a
+        # genuine 2-vs-2 split among real, fixture-matching, final
+        # sources still counts as "real evidence" and locks the set
+        # (so nobody can quietly drop a real dissenting source to
+        # break the tie on retry) - only irrelevant/unusable evidence
+        # fails to lock.
+        #
+        # Without this staging, resolve_agreement's permissionless
+        # nature would let ANY caller (not just party_a/party_b)
+        # permanently poison an agreement on the very first call by
+        # submitting allowlisted domains that happen to be irrelevant
+        # pages, before those pages ever had a chance to prove
+        # themselves - locking the agreement into a state that can
+        # never produce real evidence again.
+        # ------------------------------------------------------------
+        if not locked_source_urls and result["independent_source_count"] >= self.MIN_INDEPENDENT_SOURCES:
+            agreement["locked_source_urls"] = list(source_urls)
+
         if result["winner"] != "unresolved":
             agreement["status"] = "resolved"
             agreement["resolved_at"] = self._now_utc().isoformat()
