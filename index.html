@@ -35,80 +35,62 @@
   a{color:var(--pitch-bright);}
   code{ font-family:'IBM Plex Mono',monospace; }
 
-  header{
-    max-width:1180px;
-    margin:0 auto;
-    padding:44px 20px 26px;
+  .wrap{ max-width:1080px; margin:0 auto; padding:0 20px; }
+
+  header.top{
     border-bottom:1px solid var(--line);
+    padding:22px 0 0;
   }
+  .brand-row{ display:flex; flex-wrap:wrap; align-items:flex-end; justify-content:space-between; gap:14px; }
   .eyebrow{
     font-family:'IBM Plex Mono',monospace;
-    font-size:12px;
+    font-size:11px;
     letter-spacing:.16em;
     text-transform:uppercase;
     color:var(--pitch-bright);
-    margin:0 0 12px;
+    margin:0 0 8px;
   }
   h1{
     font-family:'Oswald',sans-serif;
     font-weight:700;
-    font-size:clamp(30px,5vw,48px);
+    font-size:clamp(28px,5vw,42px);
     line-height:1.05;
-    letter-spacing:.01em;
-    margin:0 0 14px;
+    margin:0;
     color:var(--chalk);
     text-transform:uppercase;
   }
   h1 em{ font-style:normal; color:var(--gold); }
-  .lede{
-    font-size:16px;
-    line-height:1.6;
-    color:var(--chalk-dim);
-    max-width:640px;
-    margin:0 0 6px;
-  }
-  .addr-line{
-    font-family:'IBM Plex Mono',monospace;
-    font-size:12px;
-    color:var(--chalk-dim);
-    margin-top:16px;
-    padding-top:16px;
-    border-top:1px dashed var(--line);
-  }
-  .addr-line code{ color:var(--gold); word-break:break-all; }
-  .status-pill{
-    display:flex;
-    flex-wrap:wrap;
-    align-items:center;
-    gap:8px;
-    font-family:'IBM Plex Mono',monospace;
-    font-size:12px;
-    color:var(--chalk-dim);
-    border:1px solid var(--line);
-    border-radius:4px;
-    padding:10px 14px;
-    margin-top:14px;
+  h1 a{ color:inherit; text-decoration:none; }
+
+  .wallet{
+    display:flex; flex-wrap:wrap; align-items:center; gap:8px;
+    font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--chalk-dim);
   }
   .dot{ width:7px; height:7px; border-radius:50%; background:var(--slate); flex-shrink:0; }
   .dot.on{ background:var(--pitch-bright); box-shadow:0 0 8px var(--pitch-bright); }
-  .status-pill button{
+  .wallet button{
     background:none;border:1px solid var(--line);color:var(--pitch-bright);
     font-family:'IBM Plex Mono',monospace;font-size:11.5px;cursor:pointer;
     padding:6px 10px;border-radius:4px;
   }
-  .status-pill button:hover{ border-color:var(--pitch); }
+  .wallet button:hover{ border-color:var(--pitch); }
 
-  main{
-    max-width:1180px;
-    margin:0 auto;
-    padding:32px 20px 80px;
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:18px;
+  nav.tabs{ display:flex; gap:2px; margin-top:18px; overflow-x:auto; }
+  nav.tabs a{
+    font-family:'Oswald',sans-serif; text-transform:uppercase; letter-spacing:.05em;
+    font-size:14px; text-decoration:none; color:var(--chalk-dim);
+    padding:10px 16px; border-bottom:2px solid transparent; white-space:nowrap;
   }
-  @media (max-width:920px){ main{ grid-template-columns:1fr; } }
+  nav.tabs a:hover{ color:var(--chalk); }
+  nav.tabs a.active{ color:var(--gold); border-bottom-color:var(--gold); }
 
-  .col{ display:flex; flex-direction:column; gap:18px; }
+  main{ padding:28px 0 70px; }
+
+  .page-title{
+    font-family:'Oswald',sans-serif; text-transform:uppercase; letter-spacing:.03em;
+    font-size:24px; margin:0 0 6px;
+  }
+  .page-sub{ color:var(--chalk-dim); font-size:14px; line-height:1.55; margin:0 0 20px; max-width:680px; }
 
   .panel{
     background:var(--bg-panel);
@@ -116,88 +98,81 @@
     border-left:3px solid var(--pitch);
     border-radius:2px;
     padding:22px;
+    margin-bottom:18px;
   }
   .panel h2{
-    font-family:'Oswald',sans-serif;
-    text-transform:uppercase;
-    letter-spacing:.03em;
-    font-size:18px;
-    font-weight:600;
-    margin:0 0 4px;
+    font-family:'Oswald',sans-serif; text-transform:uppercase; letter-spacing:.03em;
+    font-size:18px; font-weight:600; margin:0 0 4px;
   }
-  .panel .desc{
-    font-size:13px;
-    color:var(--chalk-dim);
-    margin:0 0 16px;
-    line-height:1.5;
-  }
+  .panel .desc{ font-size:13px; color:var(--chalk-dim); margin:0 0 16px; line-height:1.5; }
+
   label{
-    display:block;
-    font-family:'IBM Plex Mono',monospace;
-    font-size:11px;
-    letter-spacing:.05em;
-    text-transform:uppercase;
-    color:var(--chalk-dim);
+    display:block; font-family:'IBM Plex Mono',monospace; font-size:11px;
+    letter-spacing:.05em; text-transform:uppercase; color:var(--chalk-dim);
     margin:12px 0 6px;
   }
   label:first-of-type{ margin-top:0; }
-  input[type=text], input[type=datetime-local], textarea, select{
-    width:100%;
-    background:var(--bg-panel-raised);
-    border:1px solid var(--line);
-    border-radius:3px;
-    color:var(--chalk);
-    font-family:'Inter',sans-serif;
-    font-size:13.5px;
-    padding:9px 10px;
+  input[type=text], input[type=datetime-local], input[type=search], textarea, select{
+    width:100%; background:var(--bg-panel-raised); border:1px solid var(--line);
+    border-radius:3px; color:var(--chalk); font-family:'Inter',sans-serif;
+    font-size:13.5px; padding:9px 10px;
   }
   textarea{ font-family:'IBM Plex Mono',monospace; font-size:12.5px; resize:vertical; min-height:70px; }
   input:focus, textarea:focus, select:focus{ outline:2px solid var(--pitch); outline-offset:1px; }
   .hint{ font-size:11.5px; color:var(--slate); margin-top:4px; }
   .row2{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  @media (max-width:560px){ .row2{ grid-template-columns:1fr; } }
 
   button.primary, button.secondary{
-    font-family:'IBM Plex Mono',monospace;
-    font-size:12.5px;
-    letter-spacing:.03em;
-    text-transform:uppercase;
-    padding:10px 16px;
-    border-radius:3px;
-    cursor:pointer;
-    margin-top:16px;
-    margin-right:8px;
+    font-family:'IBM Plex Mono',monospace; font-size:12.5px; letter-spacing:.03em;
+    text-transform:uppercase; padding:10px 16px; border-radius:3px; cursor:pointer;
+    margin-top:16px; margin-right:8px;
   }
   button.primary{ background:var(--pitch); border:1px solid var(--pitch); color:#04220A; font-weight:600; }
   button.primary:hover{ background:var(--pitch-bright); }
+  button.primary:disabled{ opacity:.5; cursor:wait; }
   button.secondary{ background:none; border:1px solid var(--line); color:var(--chalk-dim); }
   button.secondary:hover{ border-color:var(--red); color:var(--red); }
 
   .out{
-    display:none;
-    margin-top:14px;
-    background:var(--bg-panel-raised);
-    border:1px solid var(--line);
-    border-radius:3px;
-    padding:12px;
-    font-family:'IBM Plex Mono',monospace;
-    font-size:12px;
-    white-space:pre-wrap;
-    word-break:break-word;
-    max-height:340px;
-    overflow:auto;
-    color:var(--chalk-dim);
+    display:none; margin-top:14px; background:var(--bg-panel-raised);
+    border:1px solid var(--line); border-radius:3px; padding:12px;
+    font-family:'IBM Plex Mono',monospace; font-size:12px; white-space:pre-wrap;
+    word-break:break-word; max-height:340px; overflow:auto; color:var(--chalk-dim);
   }
   .out.ok{ border-color:var(--pitch); color:var(--chalk); }
   .out.err{ border-color:var(--red); color:#F0BFBD; }
 
+  /* ---------- Explore ---------- */
+  .toolbar{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:14px; }
+  .toolbar input[type=search]{ flex:1 1 240px; }
+  .chips{ display:flex; flex-wrap:wrap; gap:6px; }
+  .chip{
+    font-family:'IBM Plex Mono',monospace; font-size:11px; text-transform:uppercase;
+    letter-spacing:.04em; border:1px solid var(--line); background:none; color:var(--chalk-dim);
+    padding:6px 10px; border-radius:999px; cursor:pointer;
+  }
+  .chip.active{ border-color:var(--pitch-bright); color:var(--pitch-bright); background:rgba(63,155,79,.1); }
+  .list-meta{ font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--slate); margin:0 0 10px; }
+
+  a.card{
+    display:block; text-decoration:none; color:inherit;
+    background:var(--bg-panel); border:1px solid var(--line);
+    border-left:3px solid var(--pitch); border-radius:2px;
+    padding:16px 18px; margin-bottom:10px;
+  }
+  a.card:hover{ border-color:var(--pitch); background:var(--bg-panel-raised); }
+  .card-top{ display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px; }
+  .card-teams{ font-family:'Oswald',sans-serif; font-size:19px; text-transform:uppercase; letter-spacing:.02em; }
+  .card-meta{ display:flex; flex-wrap:wrap; gap:14px; margin-top:8px; font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--chalk-dim); }
+  .card-meta .id{ color:var(--gold); }
+  .empty{ color:var(--slate); font-style:italic; font-size:13.5px; padding:20px 0; }
+
+  /* ---------- Detail ---------- */
+  .back{ display:inline-block; font-family:'IBM Plex Mono',monospace; font-size:12px; margin-bottom:14px; text-decoration:none; }
   .verdict-hero{
-    display:none;
-    text-align:center;
-    padding:20px;
-    margin-bottom:16px;
-    background:var(--bg-panel-raised);
-    border:1px solid var(--line);
-    border-radius:3px;
+    text-align:center; padding:20px; margin-bottom:16px;
+    background:var(--bg-panel-raised); border:1px solid var(--line); border-radius:3px;
   }
   .verdict-hero .vlabel{ font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--chalk-dim); }
   .verdict-hero .vvalue{ font-family:'Oswald',sans-serif; font-size:40px; font-weight:700; text-transform:uppercase; margin:4px 0; }
@@ -212,181 +187,49 @@
   .badge-status-open{ background:rgba(63,155,79,.18); color:var(--pitch-bright); }
   .badge-status-resolved{ background:rgba(228,196,104,.16); color:var(--gold); }
   .badge-status-expired, .badge-status-cancelled{ background:rgba(192,82,79,.16); color:var(--red); }
+  .badge-lapsed{ background:rgba(192,82,79,.16); color:var(--red); margin-left:6px; }
+  .badge-role{ background:rgba(95,201,111,.12); color:var(--pitch-bright); margin-left:6px; }
   .badge-cmp-Above{ background:rgba(63,155,79,.18); color:var(--pitch-bright); }
   .badge-cmp-Below{ background:rgba(192,82,79,.16); color:var(--red); }
   .badge-cmp-Equal{ background:rgba(217,163,59,.16); color:var(--amber); }
   .badge-cmp-Unclear{ background:rgba(140,153,168,.14); color:var(--chalk-dim); }
 
   .evidence-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:8px 0; border-bottom:1px solid var(--line); font-size:12px; }
-  .evidence-row .domain{ font-family:'IBM Plex Mono',monospace; color:var(--chalk); }
+  .evidence-row .domain{ font-family:'IBM Plex Mono',monospace; color:var(--chalk); word-break:break-all; }
   .evidence-row .flag{ font-family:'IBM Plex Mono',monospace; color:var(--chalk-dim); font-size:11px; }
   .evidence-empty{ font-size:12.5px; color:var(--slate); font-style:italic; }
 
-  footer{
-    max-width:1180px; margin:0 auto; padding:24px 20px 60px;
-    font-size:12px; color:var(--slate); line-height:1.6;
-  }
+  footer{ padding:10px 0 60px; font-size:12px; color:var(--slate); line-height:1.6; }
+  footer code{ color:var(--gold); word-break:break-all; }
 </style>
 </head>
 <body>
 
-<header>
-  <p class="eyebrow">GenLayer Intelligent Contract · Sports Vertical</p>
-  <h1>Score<em>Settle</em></h1>
-  <p class="lede">
-    A two-party, address-bound, deadline-gated, multi-source sports score
-    settlement contract. Party binding, a single-day resolution window
-    after full-time, and mandatory corroboration from at least two
-    reputable sports outlets — no side ever settles a match on one page.
-  </p>
-  <div class="addr-line">Contract address: <code id="contractAddrText">—</code></div>
-  <div class="status-pill">
-    <span class="dot" id="statusDot"></span>
-    <span id="statusText">Not connected</span>
-    <button id="connectBtn" type="button">Connect MetaMask</button>
-    <button id="testSessionBtn" type="button">Start test session</button>
-    <span id="testSessionNote" style="display:none;">Test session key lives only in this tab — refresh loses it.</span>
+<header class="top">
+  <div class="wrap">
+    <div class="brand-row">
+      <div>
+        <p class="eyebrow">GenLayer Intelligent Contract · Sports Vertical</p>
+        <h1><a href="#/">Score<em>Settle</em></a></h1>
+      </div>
+      <div class="wallet">
+        <span class="dot" id="statusDot"></span>
+        <span id="statusText">Not connected</span>
+        <button id="connectBtn" type="button">Connect MetaMask</button>
+        <button id="testSessionBtn" type="button">Start test session</button>
+      </div>
+    </div>
+    <nav class="tabs" id="tabs"></nav>
   </div>
 </header>
 
-<main>
-  <div class="col">
+<main class="wrap" id="view"></main>
 
-    <section class="panel">
-      <h2>Create Agreement</h2>
-      <p class="desc">Caller becomes party_a automatically. party_b must accept before the agreement binds.</p>
-
-      <label for="partyB">Party B address</label>
-      <input type="text" id="partyB" placeholder="0x…">
-
-      <label for="teams">Fixture (Team A vs Team B)</label>
-      <input type="text" id="teams" placeholder="Manchester United vs Liverpool">
-
-      <label for="matchDate">Match date</label>
-      <input type="text" id="matchDate" placeholder="2026-09-05">
-
-      <div class="row2">
-        <div>
-          <label for="threshold">Threshold (total goals)</label>
-          <input type="text" id="threshold" placeholder="2.5">
-        </div>
-        <div>
-          <label for="comparison">Comparison</label>
-          <select id="comparison">
-            <option value="above">above (over)</option>
-            <option value="below">below (under)</option>
-          </select>
-        </div>
-      </div>
-
-      <label for="description">Description</label>
-      <input type="text" id="description" placeholder="Total combined goals over/under 2.5" maxlength="200">
-
-      <label for="deadline">Resolution deadline (expected full-time, local time)</label>
-      <input type="datetime-local" id="deadline">
-      <p class="hint">Must be 2 hours – 7 days from now. Resolution window closes 24h after this.</p>
-
-      <label for="requiredDomains">Required source domains (comma-separated, 2–6, from the allowlist)</label>
-      <textarea id="requiredDomains">espn.com, bbc.com/sport</textarea>
-      <p class="hint">Allowlist: espn.com, bbc.com, skysports.com, reuters.com, ap.org, goal.com, fifa.com, nba.com, nfl.com, nhl.com, mlb.com, thescore.com, flashscore.com, sportsmole.co.uk. A domain entry may optionally pin a path, e.g. "bbc.com/sport".</p>
-
-      <button class="primary" id="createBtn" type="button">Create agreement</button>
-      <div class="out" id="createOut"></div>
-    </section>
-
-    <section class="panel">
-      <h2>Accept / Cancel Agreement</h2>
-      <p class="desc">Only party_b can accept. Only party_a can cancel, and only before acceptance.</p>
-
-      <label for="acceptId">Agreement ID</label>
-      <input type="text" id="acceptId" placeholder="0">
-
-      <button class="primary" id="acceptBtn" type="button">Accept (party_b)</button>
-      <button class="secondary" id="cancelBtn" type="button">Cancel (party_a)</button>
-      <div class="out" id="acceptOut"></div>
-    </section>
-
-    <section class="panel">
-      <h2>Resolve Agreement</h2>
-      <p class="desc">Only callable after the deadline (full-time) and before the 24h resolution window closes. Every committed domain (and pinned path) must be represented.</p>
-
-      <label for="resolveId">Agreement ID</label>
-      <input type="text" id="resolveId" placeholder="0">
-
-      <label for="sourceUrls">Source URLs (one per line, 2–6)</label>
-      <textarea id="sourceUrls" placeholder="https://espn.com/soccer/match/...&#10;https://bbc.com/sport/football/..."></textarea>
-      <p class="hint">On the FIRST successful attempt, this exact set of URLs is locked for this agreement — every later retry must resubmit the same set.</p>
-
-      <button class="primary" id="resolveBtn" type="button">Resolve</button>
-      <div class="out" id="resolveOut"></div>
-    </section>
-
-    <section class="panel">
-      <h2>Expire Agreement</h2>
-      <p class="desc">Permissionless. Moves a lapsed agreement (never accepted, or never resolved in time) to "expired".</p>
-
-      <label for="expireId">Agreement ID</label>
-      <input type="text" id="expireId" placeholder="0">
-
-      <button class="primary" id="expireBtn" type="button">Expire</button>
-      <div class="out" id="expireOut"></div>
-    </section>
-
-  </div>
-
-  <div class="col">
-
-    <section class="panel">
-      <h2>Read Agreement</h2>
-      <p class="desc">Full auditable record: parties, fixture, terms, timing, status, and (once attempted) the per-source evidence trail.</p>
-
-      <label for="readId">Agreement ID</label>
-      <input type="text" id="readId" placeholder="0">
-      <button class="primary" id="readBtn" type="button">Read</button>
-
-      <div class="verdict-hero" id="verdictHero">
-        <div class="vlabel">Final verdict</div>
-        <div class="vvalue" id="verdictValue">—</div>
-        <div class="vwinner" id="verdictWinner">—</div>
-      </div>
-
-      <div id="fieldsList"></div>
-
-      <h2 style="margin-top:20px;">Evidence</h2>
-      <div id="evidenceList"></div>
-
-      <div class="out" id="readOut"></div>
-    </section>
-
-    <section class="panel">
-      <h2>Check Role</h2>
-      <p class="desc">Look up whether an address is party_a, party_b, or unrelated to a given agreement.</p>
-
-      <label for="roleId">Agreement ID</label>
-      <input type="text" id="roleId" placeholder="0">
-      <label for="roleAddr">Address</label>
-      <input type="text" id="roleAddr" placeholder="0x…">
-
-      <button class="primary" id="roleBtn" type="button">Check role</button>
-      <div class="out" id="roleOut"></div>
-    </section>
-
-    <section class="panel">
-      <h2>Total Agreements</h2>
-      <p class="desc">Total number of agreements ever created on this contract instance.</p>
-
-      <button class="primary" id="totalBtn" type="button">Fetch total_agreements</button>
-      <div class="out" id="totalOut"></div>
-    </section>
-
-  </div>
-</main>
-
-<footer>
-  ScoreSettle dApp — a minimal reference frontend built with <code>genlayer-js</code>.
-  Every dynamic value on this page is written with <code>textContent</code>/<code>createElement</code> only —
-  <code>innerHTML</code> is never used, so data returned from the contract or fetched off-chain can never be
-  interpreted as HTML/script by this page.
+<footer class="wrap">
+  Contract: <code id="contractAddrText">—</code><br>
+  Test-session keys live only in this browser tab. Every dynamic value on this page is written with
+  <code>textContent</code>/<code>createElement</code> only — <code>innerHTML</code> is never used,
+  so contract or off-chain data can never be interpreted as markup.
 </footer>
 
 <script type="module">
@@ -395,19 +238,26 @@ import { studionet } from "https://esm.sh/genlayer-js@latest/chains";
 
 // ------------------------------------------------------------------
 // EDIT THIS if you redeploy the contract to a new address.
+// The list views need a contract version that has list_agreements().
 // ------------------------------------------------------------------
-const CONTRACT_ADDRESS = "0xaeE8fA79C7d29429A6DAf67dACC494C13cc4Bc01";
+const CONTRACT_ADDRESS = "0x9c1F6019AA0C546202f2cF2Ce596b1466373E9a8";
+
+const PAGE_SIZE = 20;
+const STATUS_FILTERS = ['all', 'pending_acceptance', 'open', 'resolved', 'expired', 'cancelled'];
 
 document.getElementById('contractAddrText').textContent = CONTRACT_ADDRESS;
 
+// ------------------------------------------------------------------
+// Wallet / clients
+// ------------------------------------------------------------------
 let client = null;
-let account = null;
+let account = null;   // address string of the connected wallet
+const readClient = createClient({ chain: studionet });
 
 const statusDot = document.getElementById('statusDot');
 const statusText = document.getElementById('statusText');
 const connectBtn = document.getElementById('connectBtn');
 const testSessionBtn = document.getElementById('testSessionBtn');
-const testSessionNote = document.getElementById('testSessionNote');
 
 function setStatus(connected, label){
   statusDot.classList.toggle('on', connected);
@@ -416,16 +266,16 @@ function setStatus(connected, label){
 
 async function connectWallet(){
   if (!window.ethereum) {
-    setStatus(false, 'No injected wallet found — install MetaMask, or use "start test session" instead');
+    setStatus(false, 'No injected wallet — install MetaMask or start a test session');
     return;
   }
   try {
     const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
     account = accounts[0];
     client = createClient({ chain: studionet, account });
-    setStatus(true, `Connected (MetaMask) · ${account.slice(0,6)}…${account.slice(-4)}`);
+    setStatus(true, `MetaMask · ${account.slice(0,6)}…${account.slice(-4)}`);
     connectBtn.textContent = 'reconnect';
-    testSessionNote.style.display = 'none';
+    route();
   } catch (err) {
     setStatus(false, 'Connection rejected');
   }
@@ -436,33 +286,35 @@ function startTestSession(){
   const generated = createAccount();
   account = generated.address ?? generated;
   client = createClient({ chain: studionet, account: generated });
-  setStatus(true, `Connected (test session) · ${account.slice(0,6)}…${account.slice(-4)}`);
+  setStatus(true, `Test session · ${account.slice(0,6)}…${account.slice(-4)} (lost on refresh)`);
   testSessionBtn.textContent = 'new test session';
-  testSessionNote.style.display = 'block';
+  route();
 }
 testSessionBtn.addEventListener('click', startTestSession);
 
-// Read-only client, usable even without a wallet connection.
-const readClient = createClient({ chain: studionet });
-
 // ------------------------------------------------------------------
-// DOM-safety helpers. Every dynamic value on this page goes through
-// one of these — textContent for plain text, createElement for
-// structure. innerHTML is never used anywhere in this file, so
-// contract output or fetched content can never be parsed as markup.
+// DOM-safety helpers (no innerHTML anywhere in this file)
 // ------------------------------------------------------------------
 function clearChildren(node){
   while (node.firstChild) node.removeChild(node.firstChild);
 }
 
-function makeEl(tag, opts, children){
+/** h('div', {class:'x', text:'hi', onclick: fn, href:'#/'}, [children]) */
+function h(tag, opts, children){
   const node = document.createElement(tag);
   if (opts) {
-    if (opts.className) node.className = opts.className;
-    if (opts.text !== undefined) node.textContent = opts.text;
+    for (const [key, value] of Object.entries(opts)) {
+      if (value === undefined || value === null) continue;
+      if (key === 'class') node.className = value;
+      else if (key === 'text') node.textContent = value;
+      else if (key.startsWith('on')) node.addEventListener(key.slice(2), value);
+      else node.setAttribute(key, String(value));
+    }
   }
   if (children) {
-    for (const child of children) node.appendChild(child);
+    for (const child of children) {
+      if (child) node.appendChild(child);
+    }
   }
   return node;
 }
@@ -470,45 +322,39 @@ function makeEl(tag, opts, children){
 function showOut(el, text, kind){
   el.style.display = 'block';
   el.className = 'out' + (kind ? ' ' + kind : '');
-  el.textContent = text; // safe: textContent never interprets markup
+  el.textContent = text;
 }
 
-function parseCommaList(raw){
-  return raw.split(',').map(s => s.trim()).filter(Boolean);
+function shortAddr(a){
+  return a && a.length > 12 ? `${a.slice(0,6)}…${a.slice(-4)}` : (a || '—');
 }
 
-function parseLineList(raw){
-  return raw.split('\n').map(s => s.trim()).filter(Boolean);
+function sameAddr(a, b){
+  return !!a && !!b && String(a).toLowerCase() === String(b).toLowerCase();
 }
 
-/**
- * Convert a <input type="datetime-local"> value (local time, no
- * timezone) into an ISO-8601 UTC string ending in "Z", which is what
- * the contract's resolution_deadline parameter expects.
- */
+function parseCommaList(raw){ return raw.split(',').map(s => s.trim()).filter(Boolean); }
+function parseLineList(raw){ return raw.split('\n').map(s => s.trim()).filter(Boolean); }
+
 function localInputToIsoUtc(localValue){
-  const d = new Date(localValue); // interpreted as local time by the Date constructor
+  const d = new Date(localValue);
   if (isNaN(d.getTime())) return null;
-  return d.toISOString(); // always UTC, always ends in "Z"
+  return d.toISOString();
 }
 
 function defaultDeadlineLocalValue(){
-  const future = new Date(Date.now() + 3 * 3600000); // now + 3 hours
-  const tzOffsetMs = future.getTimezoneOffset() * 60000;
-  const local = new Date(future.getTime() - tzOffsetMs);
-  return local.toISOString().slice(0, 16); // "YYYY-MM-DDTHH:MM"
+  const future = new Date(Date.now() + 3 * 3600000);
+  const local = new Date(future.getTime() - future.getTimezoneOffset() * 60000);
+  return local.toISOString().slice(0, 16);
 }
-document.getElementById('deadline').value = defaultDeadlineLocalValue();
 
-/**
- * Extract the contract method's actual return value from a GenLayer
- * transaction receipt. The leader's decoded return value is nested at
- * receipt.consensus_data.leader_receipt[0].result.payload.readable as
- * a JSON-encoded string (e.g. '"0"' for a bare string return, or a
- * JSON string of a JSON string for methods that themselves return
- * json.dumps(...), like resolve_agreement/get_agreement). This
- * unwraps that nesting generically.
- */
+function fmtTime(iso){
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return isNaN(d.getTime()) ? String(iso) : d.toLocaleString();
+}
+
+/** Unwrap the contract method's return value from a tx receipt. */
 function extractReturnValue(receipt){
   const payload = receipt?.consensus_data?.leader_receipt?.[0]?.result?.payload?.readable;
   if (payload === undefined) return null;
@@ -516,304 +362,485 @@ function extractReturnValue(receipt){
   for (let i = 0; i < 3; i++) {
     if (typeof value !== 'string') break;
     const trimmed = value.trim();
-    const looksLikeJson = trimmed.startsWith('{') || trimmed.startsWith('[') || trimmed.startsWith('"');
-    if (!looksLikeJson) break;
+    if (!(trimmed.startsWith('{') || trimmed.startsWith('[') || trimmed.startsWith('"'))) break;
     try { value = JSON.parse(value); } catch (e) { break; }
   }
   return value;
 }
 
-function requireClient(out){
+/** True once an agreement can be moved to "expired" by anyone. */
+function isLapsed(a){
+  const now = Date.now();
+  if (a.status === 'pending_acceptance') return now > new Date(a.resolution_deadline).getTime();
+  if (a.status === 'open') return now > new Date(a.resolution_window_closes_at).getTime();
+  return false;
+}
+
+function roleOf(a){
+  if (!account) return 'none';
+  if (sameAddr(a.party_a, account)) return 'party_a';
+  if (sameAddr(a.party_b, account)) return 'party_b';
+  return 'none';
+}
+
+async function readContract(functionName, args){
+  const raw = await readClient.readContract({ address: CONTRACT_ADDRESS, functionName, args });
+  return typeof raw === 'string' ? JSON.parse(raw) : raw;
+}
+
+/** Send a write tx and wait for finalization; returns the decoded result. */
+async function sendTx(functionName, args, outEl, opts){
   if (!client) {
-    showOut(out, 'Connect a wallet first (MetaMask or test session).', 'err');
-    return false;
+    showOut(outEl, 'Connect a wallet first (MetaMask or test session).', 'err');
+    throw new Error('no-client');
   }
-  return true;
-}
-
-// ---------- 01: Create Agreement ----------
-document.getElementById('createBtn').addEventListener('click', async () => {
-  const out = document.getElementById('createOut');
-  if (!requireClient(out)) return;
-
-  const partyB = document.getElementById('partyB').value.trim();
-  const teams = document.getElementById('teams').value.trim();
-  const matchDate = document.getElementById('matchDate').value.trim();
-  const threshold = document.getElementById('threshold').value.trim();
-  const comparison = document.getElementById('comparison').value;
-  const description = document.getElementById('description').value.trim();
-  const deadlineLocal = document.getElementById('deadline').value;
-  const domains = parseCommaList(document.getElementById('requiredDomains').value);
-
-  if (!partyB) { showOut(out, "Enter party B's address.", 'err'); return; }
-  if (!teams.toLowerCase().includes(' vs ')) { showOut(out, 'Enter teams as "Team A vs Team B".', 'err'); return; }
-  if (!matchDate) { showOut(out, 'Enter the match date.', 'err'); return; }
-  const deadlineIso = localInputToIsoUtc(deadlineLocal);
-  if (!deadlineIso) { showOut(out, 'Enter a valid resolution deadline.', 'err'); return; }
-  if (domains.length < 2) { showOut(out, 'Enter at least 2 required source domains.', 'err'); return; }
-
-  const args = [partyB, teams, matchDate, threshold, comparison, description, deadlineIso, domains];
-
-  try {
-    showOut(out, 'Submitting transaction…');
-    const txHash = await client.writeContract({
-      address: CONTRACT_ADDRESS,
-      functionName: 'create_agreement',
-      args,
-      value: 0,
-    });
-    showOut(out, `Transaction sent: ${txHash}\nWaiting for finalization…`);
-    const receipt = await client.waitForTransactionReceipt({
-      hash: txHash, status: 'FINALIZED', interval: 4000, retries: 30,
-    });
-    const agreementId = extractReturnValue(receipt);
-    if (agreementId !== null && agreementId !== undefined) {
-      showOut(out, `Agreement created. ID: ${agreementId}\n\nTx: ${txHash}`, 'ok');
-      document.getElementById('acceptId').value = String(agreementId);
-      document.getElementById('resolveId').value = String(agreementId);
-      document.getElementById('expireId').value = String(agreementId);
-      document.getElementById('readId').value = String(agreementId);
-    } else {
-      showOut(out, `Finalized, but the agreement ID could not be auto-detected.\nCheck the explorer.\n\nTx: ${txHash}`, 'ok');
-    }
-  } catch (err) {
-    showOut(out, 'Error: ' + (err?.message || String(err)), 'err');
-  }
-});
-
-// ---------- 02: Accept / Cancel Agreement ----------
-document.getElementById('acceptBtn').addEventListener('click', async () => {
-  const out = document.getElementById('acceptOut');
-  if (!requireClient(out)) return;
-  const id = document.getElementById('acceptId').value.trim();
-  if (!id) { showOut(out, 'Enter an agreement ID.', 'err'); return; }
-  try {
-    showOut(out, 'Submitting transaction…');
-    const txHash = await client.writeContract({
-      address: CONTRACT_ADDRESS, functionName: 'accept_agreement', args: [id], value: 0,
-    });
-    showOut(out, `Transaction sent: ${txHash}\nWaiting for finalization…`);
-    const receipt = await client.waitForTransactionReceipt({
-      hash: txHash, status: 'FINALIZED', interval: 4000, retries: 30,
-    });
-    const result = extractReturnValue(receipt);
-    showOut(out, `Accepted.\n\nTx: ${txHash}\n\n${result !== null ? JSON.stringify(result, null, 2) : 'See explorer.'}`, 'ok');
-  } catch (err) {
-    showOut(out, 'Error: ' + (err?.message || String(err)), 'err');
-  }
-});
-
-document.getElementById('cancelBtn').addEventListener('click', async () => {
-  const out = document.getElementById('acceptOut');
-  if (!requireClient(out)) return;
-  const id = document.getElementById('acceptId').value.trim();
-  if (!id) { showOut(out, 'Enter an agreement ID.', 'err'); return; }
-  try {
-    showOut(out, 'Submitting transaction…');
-    const txHash = await client.writeContract({
-      address: CONTRACT_ADDRESS, functionName: 'cancel_agreement', args: [id], value: 0,
-    });
-    showOut(out, `Transaction sent: ${txHash}\nWaiting for finalization…`);
-    const receipt = await client.waitForTransactionReceipt({
-      hash: txHash, status: 'FINALIZED', interval: 4000, retries: 30,
-    });
-    const result = extractReturnValue(receipt);
-    showOut(out, `Cancelled.\n\nTx: ${txHash}\n\n${result !== null ? JSON.stringify(result, null, 2) : 'See explorer.'}`, 'ok');
-  } catch (err) {
-    showOut(out, 'Error: ' + (err?.message || String(err)), 'err');
-  }
-});
-
-// ---------- 03: Resolve Agreement ----------
-document.getElementById('resolveBtn').addEventListener('click', async () => {
-  const out = document.getElementById('resolveOut');
-  if (!requireClient(out)) return;
-
-  const id = document.getElementById('resolveId').value.trim();
-  const urls = parseLineList(document.getElementById('sourceUrls').value);
-
-  if (!id) { showOut(out, 'Enter an agreement ID.', 'err'); return; }
-  if (urls.length < 2 || urls.length > 6) {
-    showOut(out, 'Provide 2–6 source URLs (one per line).', 'err');
-    return;
-  }
-
-  try {
-    showOut(out, 'Submitting transaction — this triggers live fetch + LLM extraction under validator consensus, it can take a while…');
-    const txHash = await client.writeContract({
-      address: CONTRACT_ADDRESS, functionName: 'resolve_agreement', args: [id, urls], value: 0,
-    });
-    showOut(out, `Transaction sent: ${txHash}\nWaiting for finalization — this runs a real fetch + LLM extraction per source, so it can take a few minutes…`);
-    const receipt = await client.waitForTransactionReceipt({
-      hash: txHash, status: 'FINALIZED', interval: 5000, retries: 90,
-    });
-    const result = extractReturnValue(receipt);
-    showOut(out, `Resolved.\n\nTx: ${txHash}\n\n${result !== null ? JSON.stringify(result, null, 2) : JSON.stringify(receipt, null, 2)}`, 'ok');
-    document.getElementById('readId').value = id;
-    fetchAgreement(id);
-  } catch (err) {
-    const message = err?.message || String(err);
-    if (/timed out/i.test(message)) {
-      showOut(out, `${message}\n\nThis is just the browser giving up on waiting — the transaction may still finalize on-chain. Wait, then use "Read Agreement" with the same ID.`, 'err');
-    } else {
-      showOut(out, 'Error: ' + message, 'err');
-    }
-  }
-});
-
-// ---------- 04: Expire Agreement ----------
-document.getElementById('expireBtn').addEventListener('click', async () => {
-  const out = document.getElementById('expireOut');
-  if (!requireClient(out)) return;
-  const id = document.getElementById('expireId').value.trim();
-  if (!id) { showOut(out, 'Enter an agreement ID.', 'err'); return; }
-  try {
-    showOut(out, 'Submitting transaction…');
-    const txHash = await client.writeContract({
-      address: CONTRACT_ADDRESS, functionName: 'expire_agreement', args: [id], value: 0,
-    });
-    showOut(out, `Transaction sent: ${txHash}\nWaiting for finalization…`);
-    const receipt = await client.waitForTransactionReceipt({
-      hash: txHash, status: 'FINALIZED', interval: 4000, retries: 30,
-    });
-    const result = extractReturnValue(receipt);
-    showOut(out, `Expired.\n\nTx: ${txHash}\n\n${result !== null ? JSON.stringify(result, null, 2) : 'See explorer.'}`, 'ok');
-  } catch (err) {
-    showOut(out, 'Error: ' + (err?.message || String(err)), 'err');
-  }
-});
-
-// ---------- 05: Read Agreement ----------
-document.getElementById('readBtn').addEventListener('click', () => {
-  const id = document.getElementById('readId').value.trim();
-  if (!id) return;
-  fetchAgreement(id);
-});
-
-async function fetchAgreement(id){
-  const out = document.getElementById('readOut');
-  try {
-    showOut(out, 'Reading contract state…');
-    const raw = await readClient.readContract({
-      address: CONTRACT_ADDRESS, functionName: 'get_agreement', args: [id],
-    });
-    const agreement = typeof raw === 'string' ? JSON.parse(raw) : raw;
-    showOut(out, JSON.stringify(agreement, null, 2), 'ok');
-    renderAgreement(agreement);
-  } catch (err) {
-    showOut(out, 'Error: ' + (err?.message || String(err)), 'err');
-    const evidenceList = document.getElementById('evidenceList');
-    clearChildren(evidenceList);
-    evidenceList.appendChild(makeEl('p', { className: 'evidence-empty', text: 'Could not load agreement.' }));
-    document.getElementById('verdictHero').style.display = 'none';
-    clearChildren(document.getElementById('fieldsList'));
-  }
-}
-
-/**
- * Renders the agreement summary and evidence records using ONLY
- * document.createElement / textContent — never innerHTML — so that
- * every string here (party addresses, description, team names,
- * domains, URLs, quality flags, etc.) is treated strictly as text by
- * the DOM and can never be interpreted as markup, even if a
- * malicious value somehow made it into contract storage.
- */
-function renderAgreement(agreement){
-  const verdictHero = document.getElementById('verdictHero');
-  const verdictValue = document.getElementById('verdictValue');
-  const verdictWinner = document.getElementById('verdictWinner');
-  const fieldsList = document.getElementById('fieldsList');
-  const evidenceList = document.getElementById('evidenceList');
-
-  if (agreement.final_verdict) {
-    verdictHero.style.display = 'block';
-    verdictValue.textContent = agreement.final_verdict;
-    verdictValue.style.color =
-      agreement.final_verdict === 'Above' ? 'var(--pitch-bright)' :
-      agreement.final_verdict === 'Below' ? 'var(--red)' :
-      'var(--amber)';
-    verdictWinner.textContent = (agreement.winner && agreement.winner !== 'unresolved')
-      ? `Winner: ${agreement.winner}` : 'Not yet resolved';
-  } else {
-    verdictHero.style.display = 'none';
-  }
-
-  clearChildren(fieldsList);
-  const statusBadge = makeEl('span', {
-    className: 'badge badge-status-' + (agreement.status || ''),
-    text: agreement.status || '—',
+  const o = Object.assign({ interval: 4000, retries: 30, label: 'Waiting for finalization…' }, opts || {});
+  showOut(outEl, 'Submitting transaction…');
+  const txHash = await client.writeContract({
+    address: CONTRACT_ADDRESS, functionName, args, value: 0,
   });
-  const rows = [
-    ['status', null, statusBadge],
-    ['party_a', agreement.party_a],
-    ['party_b', agreement.party_b],
-    ['teams', agreement.teams],
-    ['match_date', agreement.match_date],
-    ['threshold_score', agreement.threshold_score],
-    ['comparison', agreement.comparison],
-    ['description', agreement.description],
-    ['required_source_domains', (agreement.required_source_domains || []).join(', ')],
-    ['locked_source_urls', (agreement.locked_source_urls || []).join(', ')],
-    ['created_at', agreement.created_at],
-    ['resolution_deadline', agreement.resolution_deadline],
-    ['resolution_window_closes_at', agreement.resolution_window_closes_at],
-    ['accepted_at', agreement.accepted_at],
-    ['resolved_at', agreement.resolved_at],
-    ['resolution_attempts', agreement.resolution_attempts],
-  ];
-  for (const [key, value, customValueNode] of rows) {
-    const kSpan = makeEl('span', { className: 'k', text: key });
-    const vSpan = customValueNode
-      ? makeEl('span', { className: 'v' }, [customValueNode])
-      : makeEl('span', { className: 'v', text: (value === null || value === undefined || value === '') ? '—' : String(value) });
-    fieldsList.appendChild(makeEl('div', { className: 'field-row' }, [kSpan, vSpan]));
+  showOut(outEl, `Transaction sent: ${txHash}\n${o.label}`);
+  const receipt = await client.waitForTransactionReceipt({
+    hash: txHash, status: 'FINALIZED', interval: o.interval, retries: o.retries,
+  });
+  return { txHash, receipt, value: extractReturnValue(receipt) };
+}
+
+function errMessage(err){
+  const message = err?.message || String(err);
+  if (/timed out/i.test(message)) {
+    return `${message}\n\nThe browser stopped waiting — the transaction may still finalize on-chain. Reload this page in a minute.`;
+  }
+  return 'Error: ' + message;
+}
+
+// ------------------------------------------------------------------
+// Shared pieces
+// ------------------------------------------------------------------
+function statusBadge(a){
+  const nodes = [h('span', { class: 'badge badge-status-' + a.status, text: a.status })];
+  if (isLapsed(a)) nodes.push(h('span', { class: 'badge badge-lapsed', text: 'lapsed' }));
+  return nodes;
+}
+
+function agreementCard(a){
+  const role = roleOf(a);
+  const topRight = h('span', null, statusBadge(a));
+  if (role !== 'none') topRight.appendChild(h('span', { class: 'badge badge-role', text: role }));
+  const verdict = a.final_verdict ? `verdict ${a.final_verdict}` : null;
+  return h('a', { class: 'card', href: '#/agreement/' + encodeURIComponent(a.agreement_id) }, [
+    h('div', { class: 'card-top' }, [
+      h('span', { class: 'card-teams', text: a.teams }),
+      topRight,
+    ]),
+    h('div', { class: 'card-meta' }, [
+      h('span', { class: 'id', text: '#' + a.agreement_id }),
+      h('span', { text: `${a.comparison} ${a.threshold_score}` }),
+      h('span', { text: a.match_date }),
+      h('span', { text: `${shortAddr(a.party_a)} vs ${shortAddr(a.party_b)}` }),
+      verdict ? h('span', { text: verdict }) : null,
+    ]),
+  ]);
+}
+
+// ------------------------------------------------------------------
+// Views
+// ------------------------------------------------------------------
+const view = document.getElementById('view');
+let routeToken = 0; // discards results of a superseded async render
+
+// ---------- Explore / Mine (shared list view) ----------
+const listStates = {
+  explore: { items: [], total: 0, loaded: false, error: null, filter: 'all', query: '' },
+  mine:    { items: [], total: 0, loaded: false, error: null, filter: 'all', query: '', forAccount: null },
+};
+
+function invalidateLists(){
+  for (const st of Object.values(listStates)) {
+    st.items = []; st.total = 0; st.loaded = false; st.error = null;
+  }
+}
+
+async function fetchListPage(kind, offset){
+  if (kind === 'mine') return readContract('list_agreements_for', [account, offset, PAGE_SIZE]);
+  return readContract('list_agreements', [offset, PAGE_SIZE]);
+}
+
+async function renderList(kind){
+  const token = ++routeToken;
+  const st = listStates[kind];
+  clearChildren(view);
+
+  const title = kind === 'mine' ? 'My agreements' : 'Explore agreements';
+  const sub = kind === 'mine'
+    ? 'Every agreement where your connected wallet is party A or party B.'
+    : 'Every agreement on this contract, newest first. Open one to accept, resolve, or audit its evidence trail.';
+  view.appendChild(h('h2', { class: 'page-title', text: title }));
+  view.appendChild(h('p', { class: 'page-sub', text: sub }));
+
+  if (kind === 'mine' && !account) {
+    view.appendChild(h('div', { class: 'empty', text: 'Connect a wallet (MetaMask or test session) to see your agreements.' }));
+    return;
+  }
+  if (kind === 'mine' && st.forAccount !== account) {
+    st.items = []; st.total = 0; st.loaded = false; st.error = null; st.forAccount = account;
   }
 
-  clearChildren(evidenceList);
-  const records = agreement.records || [];
-  if (!records.length) {
-    evidenceList.appendChild(makeEl('p', { className: 'evidence-empty', text: 'No resolution evidence yet — call resolve_agreement.' }));
+  const search = h('input', {
+    type: 'search', placeholder: 'Search teams, address, description…', value: st.query,
+    oninput: (e) => { st.query = e.target.value; paintItems(); },
+  });
+  search.value = st.query;
+  const chips = h('div', { class: 'chips' });
+  const refreshBtn = h('button', { class: 'chip', type: 'button', text: '↻ refresh',
+    onclick: () => { invalidateLists(); renderList(kind); } });
+  const toolbar = h('div', { class: 'toolbar' }, [search, chips, refreshBtn]);
+  const meta = h('p', { class: 'list-meta' });
+  const listBox = h('div');
+  const moreBtn = h('button', { class: 'secondary', type: 'button', text: 'Load more' });
+  const out = h('div', { class: 'out' });
+  view.appendChild(toolbar);
+  view.appendChild(meta);
+  view.appendChild(listBox);
+  view.appendChild(moreBtn);
+  view.appendChild(out);
+
+  function matches(a){
+    if (st.filter !== 'all' && a.status !== st.filter) return false;
+    const q = st.query.trim().toLowerCase();
+    if (!q) return true;
+    return [a.teams, a.party_a, a.party_b, a.description, a.match_date, a.agreement_id]
+      .some(v => String(v || '').toLowerCase().includes(q));
+  }
+
+  function paintChips(){
+    clearChildren(chips);
+    for (const f of STATUS_FILTERS) {
+      chips.appendChild(h('button', {
+        class: 'chip' + (st.filter === f ? ' active' : ''), type: 'button',
+        text: f === 'all' ? 'all' : f.replace('_', ' '),
+        onclick: () => { st.filter = f; paintChips(); paintItems(); },
+      }));
+    }
+  }
+
+  function paintItems(){
+    clearChildren(listBox);
+    const visible = st.items.filter(matches);
+    meta.textContent = st.loaded
+      ? `Showing ${visible.length} of ${st.items.length} loaded · ${st.total} total on-chain`
+      : 'Loading…';
+    if (!visible.length) {
+      listBox.appendChild(h('div', { class: 'empty', text: st.loaded
+        ? (st.items.length ? 'No loaded agreement matches this filter.' : 'No agreements yet.')
+        : 'Loading agreements…' }));
+    }
+    for (const a of visible) listBox.appendChild(agreementCard(a));
+    moreBtn.style.display = (st.loaded && st.items.length < st.total) ? 'inline-block' : 'none';
+  }
+
+  async function loadMore(){
+    moreBtn.disabled = true;
+    try {
+      const page = await fetchListPage(kind, st.items.length);
+      if (token !== routeToken) return;
+      const seen = new Set(st.items.map(a => a.agreement_id));
+      st.items = st.items.concat((page.items || []).filter(a => !seen.has(a.agreement_id)));
+      st.total = page.total || 0;
+      st.loaded = true;
+      st.error = null;
+      out.style.display = 'none';
+    } catch (err) {
+      if (token !== routeToken) return;
+      st.error = err;
+      showOut(out, 'Could not load the list: ' + (err?.message || String(err)) +
+        '\n\nThis page needs a contract version with list_agreements(). Check CONTRACT_ADDRESS.', 'err');
+      st.loaded = true;
+    } finally {
+      moreBtn.disabled = false;
+      paintItems();
+    }
+  }
+  moreBtn.addEventListener('click', loadMore);
+
+  paintChips();
+  paintItems();
+  if (!st.loaded) await loadMore();
+}
+
+// ---------- Create ----------
+function renderCreate(){
+  ++routeToken;
+  clearChildren(view);
+  view.appendChild(h('h2', { class: 'page-title', text: 'Create agreement' }));
+  view.appendChild(h('p', { class: 'page-sub', text: 'You become party A automatically. Party B must accept before the agreement binds, and you land on the new agreement as soon as it is created.' }));
+
+  const f = {
+    partyB: h('input', { type: 'text', placeholder: '0x…' }),
+    teams: h('input', { type: 'text', placeholder: 'Manchester United vs Liverpool' }),
+    matchDate: h('input', { type: 'text', placeholder: '2026-09-05' }),
+    threshold: h('input', { type: 'text', placeholder: '2.5' }),
+    comparison: h('select', null, [
+      h('option', { value: 'above', text: 'above (over)' }),
+      h('option', { value: 'below', text: 'below (under)' }),
+    ]),
+    description: h('input', { type: 'text', placeholder: 'Total combined goals over/under 2.5', maxlength: '200' }),
+    deadline: h('input', { type: 'datetime-local' }),
+    domains: h('textarea'),
+  };
+  f.deadline.value = defaultDeadlineLocalValue();
+  f.domains.value = 'espn.com, bbc.com/sport';
+  const out = h('div', { class: 'out' });
+  const btn = h('button', { class: 'primary', type: 'button', text: 'Create agreement' });
+
+  btn.addEventListener('click', async () => {
+    const partyB = f.partyB.value.trim();
+    const teams = f.teams.value.trim();
+    const matchDate = f.matchDate.value.trim();
+    const deadlineIso = localInputToIsoUtc(f.deadline.value);
+    const domains = parseCommaList(f.domains.value);
+    if (!partyB) return showOut(out, "Enter party B's address.", 'err');
+    if (!teams.toLowerCase().includes(' vs ')) return showOut(out, 'Enter teams as "Team A vs Team B".', 'err');
+    if (!matchDate) return showOut(out, 'Enter the match date.', 'err');
+    if (!deadlineIso) return showOut(out, 'Enter a valid resolution deadline.', 'err');
+    if (domains.length < 2) return showOut(out, 'Enter at least 2 required source domains.', 'err');
+
+    btn.disabled = true;
+    try {
+      const { txHash, value } = await sendTx('create_agreement', [
+        partyB, teams, matchDate, f.threshold.value.trim(), f.comparison.value,
+        f.description.value.trim(), deadlineIso, domains,
+      ], out);
+      invalidateLists();
+      if (value !== null && value !== undefined && value !== '') {
+        location.hash = '#/agreement/' + encodeURIComponent(String(value));
+      } else {
+        showOut(out, `Finalized, but the new id could not be auto-detected. Tx: ${txHash}\nOpen "Explore" to find it.`, 'ok');
+      }
+    } catch (err) {
+      if (err.message !== 'no-client') showOut(out, errMessage(err), 'err');
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  const labeled = (text, node, hint) => [h('label', { text }), node, hint ? h('p', { class: 'hint', text: hint }) : null];
+  const panel = h('section', { class: 'panel' }, [
+    ...labeled('Party B address', f.partyB),
+    ...labeled('Fixture (Team A vs Team B)', f.teams),
+    ...labeled('Match date', f.matchDate),
+    h('div', { class: 'row2' }, [
+      h('div', null, labeled('Threshold (total goals)', f.threshold)),
+      h('div', null, labeled('Comparison', f.comparison)),
+    ]),
+    ...labeled('Description', f.description),
+    ...labeled('Resolution deadline (expected full-time, local time)', f.deadline,
+      'Must be 2 hours – 7 days from now. Resolution window closes 24h after this.'),
+    ...labeled('Required source domains (comma-separated, 2–6, from the allowlist)', f.domains,
+      'Allowlist: espn.com, bbc.com, skysports.com, reuters.com, ap.org, goal.com, fifa.com, nba.com, nfl.com, nhl.com, mlb.com, thescore.com, flashscore.com, sportsmole.co.uk. A domain may pin a path, e.g. "bbc.com/sport".'),
+    btn, out,
+  ]);
+  view.appendChild(panel);
+}
+
+// ---------- Agreement detail ----------
+function fieldRow(key, value, node){
+  const v = node
+    ? h('span', { class: 'v' }, [node])
+    : h('span', { class: 'v', text: (value === null || value === undefined || value === '') ? '—' : String(value) });
+  return h('div', { class: 'field-row' }, [h('span', { class: 'k', text: key }), v]);
+}
+
+async function renderDetail(id){
+  const token = ++routeToken;
+  clearChildren(view);
+  view.appendChild(h('a', { class: 'back', href: '#/', text: '← All agreements' }));
+  const body = h('div', null, [h('div', { class: 'empty', text: `Loading agreement #${id}…` })]);
+  view.appendChild(body);
+
+  let a;
+  try {
+    a = await readContract('get_agreement', [id]);
+  } catch (err) {
+    if (token !== routeToken) return;
+    clearChildren(body);
+    body.appendChild(h('div', { class: 'out err', style: 'display:block', text: 'Could not load agreement: ' + (err?.message || String(err)) }));
     return;
+  }
+  if (token !== routeToken) return;
+  clearChildren(body);
+
+  const role = roleOf(a);
+  const lapsed = isLapsed(a);
+
+  body.appendChild(h('h2', { class: 'page-title', text: `${a.teams}` }));
+  const statusLine = h('p', { class: 'page-sub' }, [
+    h('span', { text: `Agreement #${a.agreement_id}  ` }),
+    ...statusBadge(a),
+    role !== 'none' ? h('span', { class: 'badge badge-role', text: 'you are ' + role }) : null,
+  ]);
+  body.appendChild(statusLine);
+
+  if (a.final_verdict) {
+    const color = a.final_verdict === 'Above' ? 'var(--pitch-bright)'
+      : a.final_verdict === 'Below' ? 'var(--red)' : 'var(--amber)';
+    body.appendChild(h('div', { class: 'verdict-hero' }, [
+      h('div', { class: 'vlabel', text: 'Final verdict' }),
+      h('div', { class: 'vvalue', text: a.final_verdict, style: 'color:' + color }),
+      h('div', { class: 'vwinner', text: (a.winner && a.winner !== 'unresolved') ? `Winner: ${a.winner}` : 'Not yet resolved' }),
+    ]));
+  }
+
+  // ----- Actions (only the ones that can apply right now) -----
+  const actions = h('section', { class: 'panel' });
+  const actionOut = h('div', { class: 'out' });
+  let actionCount = 0;
+  const addAction = (title, desc, nodes) => {
+    actionCount++;
+    actions.appendChild(h('h2', { text: title }));
+    actions.appendChild(h('p', { class: 'desc', text: desc }));
+    for (const n of nodes) actions.appendChild(n);
+  };
+  const reload = () => { invalidateLists(); renderDetail(id); };
+  const runSimple = (fn, label, opts) => async (e) => {
+    const btn = e.currentTarget; btn.disabled = true;
+    try {
+      await sendTx(fn, [id], actionOut, opts);
+      showOut(actionOut, label + ' — reloading…', 'ok');
+      setTimeout(reload, 600);
+    } catch (err) {
+      if (err.message !== 'no-client') showOut(actionOut, errMessage(err), 'err');
+    } finally { btn.disabled = false; }
+  };
+
+  if (a.status === 'pending_acceptance' && !lapsed) {
+    if (role === 'party_b') {
+      addAction('Accept this agreement', 'You are party B. Accepting binds both sides before kickoff.', [
+        h('button', { class: 'primary', type: 'button', text: 'Accept', onclick: runSimple('accept_agreement', 'Accepted') }),
+      ]);
+    }
+    if (role === 'party_a') {
+      addAction('Cancel this agreement', 'Only before party B accepts. After acceptance neither side can cancel.', [
+        h('button', { class: 'secondary', type: 'button', text: 'Cancel agreement', onclick: runSimple('cancel_agreement', 'Cancelled') }),
+      ]);
+    }
+    if (role === 'none') {
+      addAction('Waiting for party B', `Only ${shortAddr(a.party_b)} can accept. Connect that wallet to act.`, []);
+    }
+  }
+
+  if (a.status === 'open') {
+    const now = Date.now();
+    const afterDeadline = now >= new Date(a.resolution_deadline).getTime();
+    if (afterDeadline && !lapsed) {
+      const urls = h('textarea', { placeholder: 'https://espn.com/soccer/match/...\nhttps://bbc.com/sport/football/...' });
+      const resolveBtn = h('button', { class: 'primary', type: 'button', text: 'Resolve' });
+      resolveBtn.addEventListener('click', async () => {
+        const list = parseLineList(urls.value);
+        if (list.length < 2 || list.length > 6) return showOut(actionOut, 'Provide 2–6 source URLs (one per line).', 'err');
+        resolveBtn.disabled = true;
+        try {
+          const { value } = await sendTx('resolve_agreement', [id, list], actionOut, {
+            interval: 5000, retries: 90,
+            label: 'Waiting for finalization — a real fetch + LLM extraction runs per source, this can take a few minutes…',
+          });
+          showOut(actionOut, 'Resolution attempt finalized — reloading…\n\n' + (value ? JSON.stringify(value, null, 2).slice(0, 1500) : ''), 'ok');
+          setTimeout(reload, 900);
+        } catch (err) {
+          if (err.message !== 'no-client') showOut(actionOut, errMessage(err), 'err');
+        } finally { resolveBtn.disabled = false; }
+      });
+      const lockHint = a.locked_source_urls
+        ? 'This agreement already has a locked source set — you must resubmit exactly these URLs:\n' + a.locked_source_urls.join('\n')
+        : 'Every committed domain (and pinned path) must be represented. The source set locks only once an attempt produces real, fixture-matched, final evidence.';
+      addAction('Resolve', `Callable by anyone, between full-time and the 24h window close. Required domains: ${(a.required_source_domains || []).join(', ')}`, [
+        h('label', { text: 'Source URLs (one per line, 2–6)' }),
+        urls,
+        h('p', { class: 'hint', text: lockHint, style: 'white-space:pre-wrap' }),
+        resolveBtn,
+      ]);
+    } else if (!afterDeadline) {
+      addAction('Not resolvable yet', `Resolution opens at full-time: ${fmtTime(a.resolution_deadline)}.`, []);
+    }
+  }
+
+  if (lapsed) {
+    addAction('Expire this agreement', 'The deadline/window has lapsed. Anyone can move it to "expired".', [
+      h('button', { class: 'primary', type: 'button', text: 'Expire', onclick: runSimple('expire_agreement', 'Expired') }),
+    ]);
+  }
+
+  if (actionCount) {
+    actions.appendChild(actionOut);
+    body.appendChild(actions);
+  }
+
+  // ----- Facts -----
+  const facts = h('section', { class: 'panel' }, [h('h2', { text: 'Terms & timing' })]);
+  const rows = [
+    ['party_a', a.party_a], ['party_b', a.party_b], ['match_date', a.match_date],
+    ['threshold_score', a.threshold_score], ['comparison', a.comparison],
+    ['description', a.description],
+    ['required_source_domains', (a.required_source_domains || []).join(', ')],
+    ['locked_source_urls', (a.locked_source_urls || []).join(', ')],
+    ['created_at', fmtTime(a.created_at)],
+    ['resolution_deadline', fmtTime(a.resolution_deadline)],
+    ['resolution_window_closes_at', fmtTime(a.resolution_window_closes_at)],
+    ['accepted_at', fmtTime(a.accepted_at)],
+    ['resolved_at', fmtTime(a.resolved_at)],
+    ['resolution_attempts', a.resolution_attempts],
+  ];
+  for (const [k, v] of rows) facts.appendChild(fieldRow(k, v));
+  body.appendChild(facts);
+
+  // ----- Evidence -----
+  const evidence = h('section', { class: 'panel' }, [h('h2', { text: 'Evidence trail' })]);
+  const records = a.records || [];
+  if (!records.length) {
+    evidence.appendChild(h('p', { class: 'evidence-empty', text: 'No resolution evidence yet.' }));
   }
   for (const r of records) {
-    const domainSpan = makeEl('span', { className: 'domain', text: r.domain || '—' });
-    const flagSpan = makeEl('span', { className: 'flag', text: r.quality_flag || '' });
     const cmp = r.comparison || 'Unclear';
-    const cmpBadge = makeEl('span', { className: 'badge badge-cmp-' + cmp, text: cmp });
-    evidenceList.appendChild(makeEl('div', { className: 'evidence-row' }, [domainSpan, flagSpan, cmpBadge]));
+    evidence.appendChild(h('div', { class: 'evidence-row' }, [
+      h('span', { class: 'domain', text: r.domain || '—' }),
+      h('span', { class: 'flag', text: r.quality_flag || '' }),
+      h('span', { class: 'badge badge-cmp-' + cmp, text: cmp }),
+    ]));
+  }
+  body.appendChild(evidence);
+}
+
+// ------------------------------------------------------------------
+// Router
+// ------------------------------------------------------------------
+function renderTabs(active){
+  const tabs = document.getElementById('tabs');
+  clearChildren(tabs);
+  const items = [['explore', '#/', 'Explore'], ['create', '#/create', 'Create'], ['mine', '#/mine', 'My agreements']];
+  for (const [key, href, text] of items) {
+    tabs.appendChild(h('a', { href, text, class: key === active ? 'active' : '' }));
   }
 }
 
-// ---------- 06: Check Role ----------
-document.getElementById('roleBtn').addEventListener('click', async () => {
-  const out = document.getElementById('roleOut');
-  const id = document.getElementById('roleId').value.trim();
-  const addr = document.getElementById('roleAddr').value.trim();
-  if (!id || !addr) { showOut(out, 'Enter both an agreement ID and an address.', 'err'); return; }
-  try {
-    showOut(out, 'Reading contract state…');
-    const role = await readClient.readContract({
-      address: CONTRACT_ADDRESS, functionName: 'get_role', args: [id, addr],
-    });
-    showOut(out, String(role), 'ok');
-  } catch (err) {
-    showOut(out, 'Error: ' + (err?.message || String(err)), 'err');
-  }
-});
+function route(){
+  const hash = location.hash || '#/';
+  const parts = hash.replace(/^#\/?/, '').split('/').filter(Boolean);
+  const head = parts[0] || '';
+  window.scrollTo(0, 0);
 
-// ---------- 07: Total Agreements ----------
-document.getElementById('totalBtn').addEventListener('click', async () => {
-  const out = document.getElementById('totalOut');
-  try {
-    showOut(out, 'Reading contract state…');
-    const total = await readClient.readContract({
-      address: CONTRACT_ADDRESS, functionName: 'total_agreements', args: [],
-    });
-    showOut(out, String(total), 'ok');
-  } catch (err) {
-    showOut(out, 'Error: ' + (err?.message || String(err)), 'err');
+  if (head === 'create') { renderTabs('create'); renderCreate(); return; }
+  if (head === 'mine') { renderTabs('mine'); renderList('mine'); return; }
+  if (head === 'agreement' && parts[1]) {
+    renderTabs('explore');
+    renderDetail(decodeURIComponent(parts[1]));
+    return;
   }
-});
+  renderTabs('explore');
+  renderList('explore');
+}
+
+window.addEventListener('hashchange', route);
+route();
 </script>
 
 </body>

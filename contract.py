@@ -229,6 +229,10 @@ class ScoreSettle(gl.Contract):
     # ...and at most this far in the future, so agreements cannot be
     # created against a fixture nobody can reason about today.
     MAX_DEADLINE_LEAD_SECONDS = 604800         # 7 days
+    # Upper bound on how many summaries a single list_agreements /
+    # list_agreements_for call returns, so one view call stays cheap no
+    # matter how many agreements exist.
+    MAX_LIST_PAGE_SIZE = 50
     # Once resolution_deadline arrives, resolve_agreement has this long
     # to actually be called with satisfying evidence before the
     # agreement can be permissionlessly expired instead. Deliberately a
@@ -1679,6 +1683,86 @@ class ScoreSettle(gl.Contract):
     def total_agreements(self) -> int:
         """Total number of agreements created so far."""
         return int(self.agreement_count)
+
+    def _agreement_summary(self, agreement: dict) -> dict:
+        """Lightweight, evidence-free projection of an agreement used by
+        the list views (the full per-source evidence trail stays behind
+        get_agreement so a list page stays small)."""
+        return {
+            "agreement_id": agreement["agreement_id"],
+            "status": agreement["status"],
+            "party_a": agreement["party_a"],
+            "party_b": agreement["party_b"],
+            "teams": agreement["teams"],
+            "match_date": agreement["match_date"],
+            "threshold_score": agreement["threshold_score"],
+            "comparison": agreement["comparison"],
+            "description": agreement["description"],
+            "created_at": agreement["created_at"],
+            "resolution_deadline": agreement["resolution_deadline"],
+            "resolution_window_closes_at": agreement["resolution_window_closes_at"],
+            "resolved_at": agreement["resolved_at"],
+            "final_verdict": agreement["final_verdict"],
+            "winner": agreement["winner"],
+            "resolution_attempts": agreement["resolution_attempts"],
+        }
+
+    def _page_args(self, offset: int, limit: int):
+        offset = int(offset)
+        limit = int(limit)
+        if offset < 0:
+            raise gl.vm.UserError("offset must be 0 or greater")
+        if limit < 1:
+            raise gl.vm.UserError("limit must be at least 1")
+        if limit > self.MAX_LIST_PAGE_SIZE:
+            limit = self.MAX_LIST_PAGE_SIZE
+        return offset, limit
+
+    @gl.public.view
+    def list_agreements(self, offset: int, limit: int) -> str:
+        """Newest-first page of agreement summaries, so a frontend can
+        browse every agreement without the user typing an id.
+        Returns JSON: {"total", "offset", "limit", "items": [...]}.
+        `limit` is capped at MAX_LIST_PAGE_SIZE. Use get_agreement for
+        one agreement's full evidence trail."""
+        offset, limit = self._page_args(offset, limit)
+        total = int(self.agreement_count)
+        items = []
+        index = total - 1 - offset
+        while index >= 0 and len(items) < limit:
+            raw = self.agreements[str(index)]
+            items.append(self._agreement_summary(json.loads(raw)))
+            index -= 1
+        return json.dumps(
+            {"total": total, "offset": offset, "limit": limit, "items": items},
+            sort_keys=True,
+        )
+
+    @gl.public.view
+    def list_agreements_for(self, address: str, offset: int, limit: int) -> str:
+        """Like list_agreements, but only agreements where `address` is
+        party_a or party_b (a "my agreements" view). `total` is the
+        number of matching agreements; `offset` pages through matches,
+        newest first."""
+        offset, limit = self._page_args(offset, limit)
+        wanted = self._address_to_str(address).lower()
+        matches = []
+        index = int(self.agreement_count) - 1
+        while index >= 0:
+            agreement = json.loads(self.agreements[str(index)])
+            if wanted in (agreement["party_a"].lower(), agreement["party_b"].lower()):
+                matches.append(agreement)
+            index -= 1
+        page = matches[offset:offset + limit]
+        return json.dumps(
+            {
+                "total": len(matches),
+                "offset": offset,
+                "limit": limit,
+                "items": [self._agreement_summary(a) for a in page],
+            },
+            sort_keys=True,
+        )
 
     @gl.public.view
     def get_role(self, agreement_id: str, address: str) -> str:

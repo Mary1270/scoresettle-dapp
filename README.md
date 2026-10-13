@@ -1,6 +1,6 @@
 ![License](https://img.shields.io/badge/license-MIT-blue)
 ![GenLayer](https://img.shields.io/badge/GenLayer-genlayer--js-3E9B4F)
-![Tests](https://img.shields.io/badge/tests-167%2F167%20passing-3E9B4F)
+![Tests](https://img.shields.io/badge/tests-180%2F180%20passing-3E9B4F)
 
 # ScoreSettle
 
@@ -14,10 +14,11 @@ project (a forex cross-rate oracle), and rebuilds every trust-sensitive
 control from scratch specifically for two-party sports-score agreements.
 
 **Contract:** deployed and live on GenLayer Studio at
-`0xaeE8fA79C7d29429A6DAf67dACC494C13cc4Bc01` —
-[view on explorer](https://explorer-studio.genlayer.com/address/0xaeE8fA79C7d29429A6DAf67dACC494C13cc4Bc01).
-(A prior instance at `0xd641d7E80A309Ba01D1D62f071873f69b2978C14` is
-superseded by this one - see "Changelog" below.)
+`0x9c1F6019AA0C546202f2cF2Ce596b1466373E9a8` —
+[view on explorer](https://explorer-studio.genlayer.com/address/0x9c1F6019AA0C546202f2cF2Ce596b1466373E9a8).
+(Prior instances at `0xaeE8fA79C7d29429A6DAf67dACC494C13cc4Bc01` (v1.0.1)
+and `0xd641d7E80A309Ba01D1D62f071873f69b2978C14` (v1.0.0) are superseded
+by this one - see "Changelog" below.)
 
 ---
 
@@ -26,7 +27,7 @@ superseded by this one - see "Changelog" below.)
 ```
 contract.py     the Intelligent Contract (GenLayer / GenVM, Python)
 index.html      the entire frontend — HTML/CSS/JS, no build step
-tests/          contract.py's offline test suite (167/167 passing)
+tests/          contract.py's offline test suite (180/180 passing)
 README.md
 LICENSE
 ```
@@ -148,12 +149,26 @@ holds bare domains only (a domain's specific section is pinned via
 ## Frontend
 
 `index.html` is a single, dependency-free file (loads `genlayer-js` from
-`esm.sh` at runtime) with panels for every public method: create, accept/
-cancel, resolve, expire, read (with a final-verdict hero and a per-source
-evidence table), check role, and total agreements. Every dynamic value on
-the page is written with `textContent` / `document.createElement` only —
-`innerHTML` is never used anywhere in the file, so no value returned from
-the contract or fetched off-chain can ever be interpreted as markup.
+`esm.sh` at runtime). It is a small multi-page app with real client-side
+(hash) routing - no manual ID lookups:
+
+- `#/` **Explore** - every agreement on the contract, newest first, with
+  status filter chips, free-text search (teams, addresses, description)
+  and "Load more" paging, backed by the contract's `list_agreements()`.
+- `#/agreement/<id>` **Agreement page** - terms, timing, final-verdict
+  hero and the per-source evidence trail, plus only the actions that
+  apply right now to the connected wallet: Accept (party B), Cancel
+  (party A, before acceptance), Resolve (after full-time, with the
+  locked source set shown if one exists) and Expire (once lapsed).
+- `#/create` **Create** - the create form; on success it navigates
+  straight to the new agreement's page.
+- `#/mine` **My agreements** - agreements where the connected wallet is
+  party A or party B, backed by `list_agreements_for()`.
+
+Every dynamic value on the page is written with `textContent` /
+`document.createElement` only - `innerHTML` is never used anywhere in
+the file, so no value returned from the contract or fetched off-chain
+can ever be interpreted as markup.
 
 `CONTRACT_ADDRESS` is already set to the deployed contract address above.
 
@@ -169,11 +184,14 @@ on-chain state.
 
 ## Test suite
 
-167 offline `unittest` tests across four files, all passing:
+180 offline `unittest` tests across five files, all passing:
 
 - `test_party_binding_and_timing.py` — create/accept/cancel binding rules,
   deadline lead-time bounds, the 24h resolution window, `expire_agreement`,
   and the view methods (`get_role`, `total_agreements`).
+- `test_list_views.py` - `list_agreements` / `list_agreements_for`:
+  newest-first order, pagination, page-size cap, invalid arguments,
+  evidence-free summaries, status changes, per-address filtering.
 - `test_teams_and_score_parsing.py` — fixture ("Team A vs Team B")
   validation, domain extraction and the domain-allowlist round-trip
   guarantee, endpoint (domain+path) parsing, and the two numeric parsers
@@ -202,8 +220,8 @@ requires GenLayer Studio or testnet.
 
 This package is already deployed and live:
 
-- **Contract:** `0xaeE8fA79C7d29429A6DAf67dACC494C13cc4Bc01` on GenLayer
-  Studio — [explorer link](https://explorer-studio.genlayer.com/address/0xaeE8fA79C7d29429A6DAf67dACC494C13cc4Bc01).
+- **Contract:** `0x9c1F6019AA0C546202f2cF2Ce596b1466373E9a8` on GenLayer
+  Studio — [explorer link](https://explorer-studio.genlayer.com/address/0x9c1F6019AA0C546202f2cF2Ce596b1466373E9a8).
 - **Frontend:** https://mary1270.github.io/scoresettle-dapp/ (GitHub Pages,
   `CONTRACT_ADDRESS` already pointed at the deployment above).
 
@@ -219,6 +237,16 @@ To deploy your own instance instead:
 ---
 
 ## Changelog
+
+**v1.1.0** - Browsable agreements and a real multi-page frontend.
+New view methods `list_agreements(offset, limit)` (newest-first page of
+evidence-free summaries, page size capped at `MAX_LIST_PAGE_SIZE` = 50)
+and `list_agreements_for(address, offset, limit)` (the same, restricted
+to agreements where the address is party A or party B). `index.html` was
+rebuilt from a single flat form page into a hash-routed app (Explore,
+Agreement page, Create, My agreements) so nobody has to type an
+agreement id to find anything. No settlement logic changed. 13 new
+tests (180 total). Redeployed at `0x9c1F6019AA0C546202f2cF2Ce596b1466373E9a8`.
 
 **v1.0.1** - Fixed a griefing vector in the voting-source-set lock:
 previously `locked_source_urls` was fixed on the very first
