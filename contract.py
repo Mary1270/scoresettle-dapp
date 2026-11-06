@@ -1765,6 +1765,83 @@ class ScoreSettle(gl.Contract):
         )
 
     @gl.public.view
+    def get_stats(self) -> str:
+        """Protocol-wide counters for a dashboard: total agreements, a
+        count per status, and how resolved agreements were decided.
+        Returns JSON: {"total", "by_status": {...}, "resolved": {...}}."""
+        by_status = {status: 0 for status in self.STATUSES}
+        decided = {"party_a": 0, "party_b": 0}
+        verdicts = {"Above": 0, "Below": 0, "Equal": 0}
+        total = int(self.agreement_count)
+        index = 0
+        while index < total:
+            agreement = json.loads(self.agreements[str(index)])
+            by_status[agreement["status"]] += 1
+            if agreement["status"] == "resolved":
+                if agreement["winner"] in decided:
+                    decided[agreement["winner"]] += 1
+                if agreement["final_verdict"] in verdicts:
+                    verdicts[agreement["final_verdict"]] += 1
+            index += 1
+        return json.dumps(
+            {
+                "total": total,
+                "by_status": by_status,
+                "resolved": {"winner_counts": decided, "verdict_counts": verdicts},
+            },
+            sort_keys=True,
+        )
+
+    @gl.public.view
+    def get_profile(self, address: str) -> str:
+        """Track record of one address across every agreement it is a
+        party to: how many it created / was invited to, how many are
+        in each status, and wins / losses on resolved ones.
+        Returns JSON: {"address", "total", "created", "invited",
+        "by_status", "wins", "losses", "win_rate_percent"}.
+        win_rate_percent is an integer, or null when nothing resolved."""
+        wanted = self._address_to_str(address).lower()
+        by_status = {status: 0 for status in self.STATUSES}
+        created = 0
+        invited = 0
+        wins = 0
+        losses = 0
+        total = int(self.agreement_count)
+        index = 0
+        while index < total:
+            agreement = json.loads(self.agreements[str(index)])
+            is_a = agreement["party_a"].lower() == wanted
+            is_b = agreement["party_b"].lower() == wanted
+            if is_a or is_b:
+                if is_a:
+                    created += 1
+                else:
+                    invited += 1
+                by_status[agreement["status"]] += 1
+                if agreement["status"] == "resolved":
+                    side = "party_a" if is_a else "party_b"
+                    if agreement["winner"] == side:
+                        wins += 1
+                    elif agreement["winner"] in ("party_a", "party_b"):
+                        losses += 1
+            index += 1
+        decided = wins + losses
+        rate = (wins * 100) // decided if decided > 0 else None
+        return json.dumps(
+            {
+                "address": wanted,
+                "total": created + invited,
+                "created": created,
+                "invited": invited,
+                "by_status": by_status,
+                "wins": wins,
+                "losses": losses,
+                "win_rate_percent": rate,
+            },
+            sort_keys=True,
+        )
+
+    @gl.public.view
     def get_role(self, agreement_id: str, address: str) -> str:
         """Return "party_a", "party_b", or "none" depending on whether
         `address` is bound to either side of this agreement. Useful

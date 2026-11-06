@@ -1,6 +1,6 @@
 ![License](https://img.shields.io/badge/license-MIT-blue)
 ![GenLayer](https://img.shields.io/badge/GenLayer-genlayer--js-3E9B4F)
-![Tests](https://img.shields.io/badge/tests-180%2F180%20passing-3E9B4F)
+![Tests](https://img.shields.io/badge/tests-189%2F189%20passing-3E9B4F)
 
 # ScoreSettle
 
@@ -14,9 +14,9 @@ project (a forex cross-rate oracle), and rebuilds every trust-sensitive
 control from scratch specifically for two-party sports-score agreements.
 
 **Contract:** deployed and live on GenLayer Studio at
-`0x9c1F6019AA0C546202f2cF2Ce596b1466373E9a8` —
-[view on explorer](https://explorer-studio.genlayer.com/address/0x9c1F6019AA0C546202f2cF2Ce596b1466373E9a8).
-(Prior instances at `0xaeE8fA79C7d29429A6DAf67dACC494C13cc4Bc01` (v1.0.1)
+`0xA557f042640AC83583E0E15FA08Ca8d636DF4E43` —
+[view on explorer](https://explorer-studio.genlayer.com/address/0xA557f042640AC83583E0E15FA08Ca8d636DF4E43).
+(Prior instances at `0x9c1F6019AA0C546202f2cF2Ce596b1466373E9a8` (v1.1.0), `0xaeE8fA79C7d29429A6DAf67dACC494C13cc4Bc01` (v1.0.1)
 and `0xd641d7E80A309Ba01D1D62f071873f69b2978C14` (v1.0.0) are superseded
 by this one - see "Changelog" below.)
 
@@ -27,7 +27,7 @@ by this one - see "Changelog" below.)
 ```
 contract.py     the Intelligent Contract (GenLayer / GenVM, Python)
 index.html      the entire frontend — HTML/CSS/JS, no build step
-tests/          contract.py's offline test suite (180/180 passing)
+tests/          contract.py's offline test suite (189/189 passing)
 README.md
 LICENSE
 ```
@@ -184,7 +184,7 @@ on-chain state.
 
 ## Test suite
 
-180 offline `unittest` tests across five files, all passing:
+189 offline `unittest` tests across six files, all passing:
 
 - `test_party_binding_and_timing.py` — create/accept/cancel binding rules,
   deadline lead-time bounds, the 24h resolution window, `expire_agreement`,
@@ -192,6 +192,9 @@ on-chain state.
 - `test_list_views.py` - `list_agreements` / `list_agreements_for`:
   newest-first order, pagination, page-size cap, invalid arguments,
   evidence-free summaries, status changes, per-address filtering.
+- `test_stats_profile.py` - `get_stats` / `get_profile`: status counters,
+  winner/verdict tallies, created vs invited, wins/losses/win rate,
+  case-insensitive addresses.
 - `test_teams_and_score_parsing.py` — fixture ("Team A vs Team B")
   validation, domain extraction and the domain-allowlist round-trip
   guarantee, endpoint (domain+path) parsing, and the two numeric parsers
@@ -220,8 +223,8 @@ requires GenLayer Studio or testnet.
 
 This package is already deployed and live:
 
-- **Contract:** `0x9c1F6019AA0C546202f2cF2Ce596b1466373E9a8` on GenLayer
-  Studio — [explorer link](https://explorer-studio.genlayer.com/address/0x9c1F6019AA0C546202f2cF2Ce596b1466373E9a8).
+- **Contract:** `0xA557f042640AC83583E0E15FA08Ca8d636DF4E43` on GenLayer
+  Studio — [explorer link](https://explorer-studio.genlayer.com/address/0xA557f042640AC83583E0E15FA08Ca8d636DF4E43).
 - **Frontend:** https://mary1270.github.io/scoresettle-dapp/ (GitHub Pages,
   `CONTRACT_ADDRESS` already pointed at the deployment above).
 
@@ -237,6 +240,15 @@ To deploy your own instance instead:
 ---
 
 ## Changelog
+
+**v1.2.0** - Stats and player profiles.
+New read-only views `get_stats()` (total, per-status counts, winner and
+verdict tallies of resolved agreements) and `get_profile(address)`
+(created / invited counts, per-status counts, wins, losses and win rate).
+`index.html` gains a stats strip on Explore, a Profile tab
+(`#/profile`, `#/profile/<address>`) and profile links on each agreement
+page. No settlement logic changed. 9 new tests (189 total).
+Redeployed at `0xA557f042640AC83583E0E15FA08Ca8d636DF4E43`.
 
 **v1.1.0** - Browsable agreements and a real multi-page frontend.
 New view methods `list_agreements(offset, limit)` (newest-first page of

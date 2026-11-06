@@ -143,6 +143,17 @@
   .out.ok{ border-color:var(--pitch); color:var(--chalk); }
   .out.err{ border-color:var(--red); color:#F0BFBD; }
 
+  /* ---------- Stats / Profile ---------- */
+  .stats{ display:grid; grid-template-columns:repeat(auto-fit,minmax(110px,1fr)); gap:10px; margin:0 0 16px; }
+  .stat{ background:var(--bg-panel); border:1px solid var(--line); border-top:2px solid var(--pitch); border-radius:2px; padding:12px 14px; }
+  .stat .n{ font-family:'Oswald',sans-serif; font-size:28px; line-height:1.1; color:var(--chalk); }
+  .stat .l{ font-family:'IBM Plex Mono',monospace; font-size:10.5px; letter-spacing:.05em; text-transform:uppercase; color:var(--slate); margin-top:2px; }
+  .stat.gold{ border-top-color:var(--gold); }
+  .stat.red{ border-top-color:var(--red); }
+  .bar{ display:flex; height:10px; border-radius:2px; overflow:hidden; background:var(--bg-panel-raised); margin:6px 0 16px; }
+  .bar span{ display:block; height:100%; }
+  .profile-links a{ margin-right:14px; font-family:'IBM Plex Mono',monospace; font-size:12px; }
+
   /* ---------- Explore ---------- */
   .toolbar{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:14px; }
   .toolbar input[type=search]{ flex:1 1 240px; }
@@ -240,7 +251,7 @@ import { studionet } from "https://esm.sh/genlayer-js@latest/chains";
 // EDIT THIS if you redeploy the contract to a new address.
 // The list views need a contract version that has list_agreements().
 // ------------------------------------------------------------------
-const CONTRACT_ADDRESS = "0x9c1F6019AA0C546202f2cF2Ce596b1466373E9a8";
+const CONTRACT_ADDRESS = "0xA557f042640AC83583E0E15FA08Ca8d636DF4E43";
 
 const PAGE_SIZE = 20;
 const STATUS_FILTERS = ['all', 'pending_acceptance', 'open', 'resolved', 'expired', 'cancelled'];
@@ -449,6 +460,76 @@ function agreementCard(a){
 const view = document.getElementById('view');
 let routeToken = 0; // discards results of a superseded async render
 
+// ---------- Stats / Profile ----------
+function statTile(n, label, cls){
+  return h('div', { class: 'stat' + (cls ? ' ' + cls : '') }, [
+    h('div', { class: 'n', text: String(n) }),
+    h('div', { class: 'l', text: label }),
+  ]);
+}
+
+async function paintStatsStrip(box, token){
+  try {
+    const st = await readContract('get_stats', []);
+    if (token !== routeToken) return;
+    clearChildren(box);
+    const b = st.by_status || {};
+    box.appendChild(statTile(st.total, 'agreements'));
+    box.appendChild(statTile(b.open || 0, 'open'));
+    box.appendChild(statTile(b.pending_acceptance || 0, 'awaiting accept', 'gold'));
+    box.appendChild(statTile(b.resolved || 0, 'resolved'));
+    box.appendChild(statTile((b.cancelled || 0) + (b.expired || 0), 'cancelled / expired', 'red'));
+  } catch (err) {
+    box.style.display = 'none';
+  }
+}
+
+async function renderProfile(addr){
+  const token = ++routeToken;
+  clearChildren(view);
+  view.appendChild(h('h2', { class: 'page-title', text: 'Player profile' }));
+  if (!addr) {
+    view.appendChild(h('div', { class: 'empty', text: 'Connect a wallet (MetaMask or test session) to see your profile, or open a profile from an agreement page.' }));
+    return;
+  }
+  view.appendChild(h('p', { class: 'page-sub', text: addr }));
+  const box = h('div', { class: 'stats' });
+  const out = h('div', { class: 'out' });
+  view.appendChild(box);
+  view.appendChild(out);
+  box.appendChild(statTile('…', 'loading'));
+  try {
+    const p = await readContract('get_profile', [addr]);
+    if (token !== routeToken) return;
+    clearChildren(box);
+    box.appendChild(statTile(p.total, 'agreements'));
+    box.appendChild(statTile(p.created, 'created'));
+    box.appendChild(statTile(p.invited, 'invited'));
+    box.appendChild(statTile(p.wins, 'wins'));
+    box.appendChild(statTile(p.losses, 'losses', 'red'));
+    box.appendChild(statTile(p.win_rate_percent === null ? '—' : p.win_rate_percent + '%', 'win rate', 'gold'));
+    const decided = p.wins + p.losses;
+    if (decided > 0) {
+      view.appendChild(h('div', { class: 'bar' }, [
+        h('span', { style: `width:${(p.wins * 100) / decided}%;background:var(--pitch)` }),
+        h('span', { style: `width:${(p.losses * 100) / decided}%;background:var(--red)` }),
+      ]));
+    }
+    const b = p.by_status || {};
+    const panel = h('section', { class: 'panel' }, [h('h2', { text: 'By status' })]);
+    for (const k of Object.keys(b)) panel.appendChild(fieldRow(k.replace('_', ' '), b[k]));
+    view.appendChild(panel);
+    const links = h('div', { class: 'profile-links' });
+    if (account && sameAddr(account, addr)) links.appendChild(h('a', { href: '#/mine', text: 'See my agreements →' }));
+    view.appendChild(links);
+  } catch (err) {
+    if (token !== routeToken) return;
+    clearChildren(box);
+    showOut(out, 'Could not load the profile: ' + (err?.message || String(err)) +
+      '\n\nThis page needs a contract version with get_profile(). Check CONTRACT_ADDRESS.', 'err');
+  }
+}
+
 // ---------- Explore / Mine (shared list view) ----------
 const listStates = {
   explore: { items: [], total: 0, loaded: false, error: null, filter: 'all', query: '' },
@@ -477,6 +558,11 @@ async function renderList(kind){
     : 'Every agreement on this contract, newest first. Open one to accept, resolve, or audit its evidence trail.';
   view.appendChild(h('h2', { class: 'page-title', text: title }));
   view.appendChild(h('p', { class: 'page-sub', text: sub }));
+  if (kind === 'explore') {
+    const strip = h('div', { class: 'stats' });
+    view.appendChild(strip);
+    paintStatsStrip(strip, token);
+  }
 
   if (kind === 'mine' && !account) {
     view.appendChild(h('div', { class: 'empty', text: 'Connect a wallet (MetaMask or test session) to see your agreements.' }));
@@ -791,6 +877,10 @@ async function renderDetail(id){
     ['resolution_attempts', a.resolution_attempts],
   ];
   for (const [k, v] of rows) facts.appendChild(fieldRow(k, v));
+  facts.appendChild(h('div', { class: 'profile-links' }, [
+    h('a', { href: '#/profile/' + encodeURIComponent(a.party_a), text: 'Party A profile →' }),
+    h('a', { href: '#/profile/' + encodeURIComponent(a.party_b), text: 'Party B profile →' }),
+  ]));
   body.appendChild(facts);
 
   // ----- Evidence -----
@@ -816,7 +906,7 @@ async function renderDetail(id){
 function renderTabs(active){
   const tabs = document.getElementById('tabs');
   clearChildren(tabs);
-  const items = [['explore', '#/', 'Explore'], ['create', '#/create', 'Create'], ['mine', '#/mine', 'My agreements']];
+  const items = [['explore', '#/', 'Explore'], ['create', '#/create', 'Create'], ['mine', '#/mine', 'My agreements'], ['profile', '#/profile', 'Profile']];
   for (const [key, href, text] of items) {
     tabs.appendChild(h('a', { href, text, class: key === active ? 'active' : '' }));
   }
@@ -829,6 +919,11 @@ function route(){
   window.scrollTo(0, 0);
 
   if (head === 'create') { renderTabs('create'); renderCreate(); return; }
+  if (head === 'profile') {
+    renderTabs('profile');
+    renderProfile(parts[1] ? decodeURIComponent(parts[1]) : account);
+    return;
+  }
   if (head === 'mine') { renderTabs('mine'); renderList('mine'); return; }
   if (head === 'agreement' && parts[1]) {
     renderTabs('explore');
