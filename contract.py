@@ -1158,6 +1158,63 @@ class ScoreSettle(gl.Contract):
         return value
 
     @gl.public.write
+    def propose_rematch(
+        self,
+        source_agreement_id: str,
+        teams: str,
+        match_date: str,
+        threshold_score: str,
+        comparison: str,
+        resolution_deadline: str,
+    ) -> str:
+        """
+        Propose a rematch against the counterparty of an already
+        RESOLVED agreement. The caller must be party_a or party_b of
+        the source agreement. The new agreement is created exactly like
+        `create_agreement`: the caller becomes party_a, the OTHER party
+        of the source agreement becomes party_b and must accept it, and
+        every create-time rule applies unchanged (fixture format,
+        deadline window, threshold, comparison).
+
+        The rematch carries over the source agreement's description and
+        its committed `required_source_domains`; the fixture
+        (`teams`, `match_date`), `threshold_score`, `comparison` and
+        `resolution_deadline` are supplied fresh. The new record stores
+        `rematch_of` = the source agreement id, so the chain of
+        rematches is auditable. Returns the new agreement_id.
+        """
+        if source_agreement_id not in self.agreements:
+            raise gl.vm.UserError("No agreement found with this id")
+        source = json.loads(self.agreements[source_agreement_id])
+        if source["status"] != "resolved":
+            raise gl.vm.UserError(
+                "A rematch can only be proposed from a resolved agreement"
+            )
+        caller = self._address_to_str(gl.message.sender_address).lower()
+        if caller == source["party_a"].lower():
+            counterparty = source["party_b"]
+        elif caller == source["party_b"].lower():
+            counterparty = source["party_a"]
+        else:
+            raise gl.vm.UserError(
+                "Only a party to the source agreement can propose a rematch"
+            )
+        new_id = self.create_agreement(
+            counterparty,
+            teams,
+            match_date,
+            threshold_score,
+            comparison,
+            source["description"],
+            resolution_deadline,
+            list(source["required_source_domains"]),
+        )
+        record = json.loads(self.agreements[new_id])
+        record["rematch_of"] = source_agreement_id
+        self.agreements[new_id] = json.dumps(record, sort_keys=True)
+        return new_id
+
+    @gl.public.write
     def accept_agreement(self, agreement_id: str) -> str:
         """
         Bind party_b to this agreement. MUST be called by the exact
@@ -1705,6 +1762,7 @@ class ScoreSettle(gl.Contract):
             "final_verdict": agreement["final_verdict"],
             "winner": agreement["winner"],
             "resolution_attempts": agreement["resolution_attempts"],
+            "rematch_of": agreement.get("rematch_of"),
         }
 
     def _page_args(self, offset: int, limit: int):
@@ -1838,6 +1896,84 @@ class ScoreSettle(gl.Contract):
                 "losses": losses,
                 "win_rate_percent": rate,
             },
+            sort_keys=True,
+        )
+
+    @gl.public.view
+    def list_agreements_by_status(self, status: str, offset: int, limit: int) -> str:
+        """Like list_agreements, but only agreements currently in
+        `status` (one of STATUSES). `total` is the number of matching
+        agreements; `offset` pages through matches, newest first."""
+        if status not in self.STATUSES:
+            raise gl.vm.UserError("Unknown status filter")
+        offset, limit = self._page_args(offset, limit)
+        matches = []
+        index = int(self.agreement_count) - 1
+        while index >= 0:
+            agreement = json.loads(self.agreements[str(index)])
+            if agreement["status"] == status:
+                matches.append(agreement)
+            index -= 1
+        page = matches[offset:offset + limit]
+        return json.dumps(
+            {
+                "status": status,
+                "total": len(matches),
+                "offset": offset,
+                "limit": limit,
+                "items": [self._agreement_summary(a) for a in page],
+            },
+            sort_keys=True,
+        )
+
+    @gl.public.view
+    def get_leaderboard(self, limit: int) -> str:
+        """Top addresses by wins on resolved agreements. Only addresses
+        with at least one resolved agreement are ranked. Ordering: most
+        wins first, then fewest losses, then address (lowercase,
+        ascending) so the ranking is deterministic. `limit` is capped at
+        MAX_LIST_PAGE_SIZE. Returns JSON: {"total_ranked", "limit",
+        "items": [{"rank", "address", "wins", "losses", "decided",
+        "win_rate_percent"}]}."""
+        _, limit = self._page_args(0, limit)
+        tally = {}
+        total = int(self.agreement_count)
+        index = 0
+        while index < total:
+            agreement = json.loads(self.agreements[str(index)])
+            if agreement["status"] == "resolved" and agreement["winner"] in ("party_a", "party_b"):
+                winner_side = agreement["winner"]
+                loser_side = "party_b" if winner_side == "party_a" else "party_a"
+                winner_addr = agreement[winner_side].lower()
+                loser_addr = agreement[loser_side].lower()
+                if winner_addr not in tally:
+                    tally[winner_addr] = [0, 0]
+                if loser_addr not in tally:
+                    tally[loser_addr] = [0, 0]
+                tally[winner_addr][0] += 1
+                tally[loser_addr][1] += 1
+            index += 1
+        ranked = sorted(
+            tally.items(),
+            key=lambda kv: (-kv[1][0], kv[1][1], kv[0]),
+        )
+        items = []
+        position = 0
+        for addr, record in ranked[:limit]:
+            position += 1
+            decided = record[0] + record[1]
+            items.append(
+                {
+                    "rank": position,
+                    "address": addr,
+                    "wins": record[0],
+                    "losses": record[1],
+                    "decided": decided,
+                    "win_rate_percent": (record[0] * 100) // decided,
+                }
+            )
+        return json.dumps(
+            {"total_ranked": len(ranked), "limit": limit, "items": items},
             sort_keys=True,
         )
 

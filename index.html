@@ -143,6 +143,15 @@
   .out.ok{ border-color:var(--pitch); color:var(--chalk); }
   .out.err{ border-color:var(--red); color:#F0BFBD; }
 
+  .board{ width:100%; border-collapse:collapse; margin:0 0 16px; }
+  .board th{ text-align:left; font-family:'IBM Plex Mono',monospace; font-size:10.5px; letter-spacing:.05em; text-transform:uppercase; color:var(--slate); padding:6px 8px; border-bottom:1px solid var(--line); }
+  .board td{ padding:10px 8px; border-bottom:1px solid var(--line); font-size:13.5px; }
+  .board td.rank{ font-family:'Oswald',sans-serif; font-size:20px; color:var(--gold); width:44px; }
+  .board td.addr a{ font-family:'IBM Plex Mono',monospace; font-size:12.5px; }
+  .board td.num{ font-family:'IBM Plex Mono',monospace; text-align:right; }
+  .board tr.me td{ background:rgba(63,155,79,.08); }
+  @media (max-width:560px){ .board .hide-sm{ display:none; } }
+
   /* ---------- Stats / Profile ---------- */
   .stats{ display:grid; grid-template-columns:repeat(auto-fit,minmax(110px,1fr)); gap:10px; margin:0 0 16px; }
   .stat{ background:var(--bg-panel); border:1px solid var(--line); border-top:2px solid var(--pitch); border-radius:2px; padding:12px 14px; }
@@ -251,7 +260,7 @@ import { studionet } from "https://esm.sh/genlayer-js@latest/chains";
 // EDIT THIS if you redeploy the contract to a new address.
 // The list views need a contract version that has list_agreements().
 // ------------------------------------------------------------------
-const CONTRACT_ADDRESS = "0xA557f042640AC83583E0E15FA08Ca8d636DF4E43";
+const CONTRACT_ADDRESS = "0x340603e3b07D6d2CE7c6838245EF924fe200DA36";
 
 const PAGE_SIZE = 20;
 const STATUS_FILTERS = ['all', 'pending_acceptance', 'open', 'resolved', 'expired', 'cancelled'];
@@ -450,6 +459,7 @@ function agreementCard(a){
       h('span', { text: a.match_date }),
       h('span', { text: `${shortAddr(a.party_a)} vs ${shortAddr(a.party_b)}` }),
       verdict ? h('span', { text: verdict }) : null,
+      a.rematch_of ? h('span', { text: 'rematch of #' + a.rematch_of }) : null,
     ]),
   ]);
 }
@@ -527,6 +537,52 @@ async function renderProfile(addr){
     clearChildren(box);
     showOut(out, 'Could not load the profile: ' + (err?.message || String(err)) +
       '\n\nThis page needs a contract version with get_profile(). Check CONTRACT_ADDRESS.', 'err');
+  }
+}
+
+async function renderLeaderboard(){
+  const token = ++routeToken;
+  clearChildren(view);
+  view.appendChild(h('h2', { class: 'page-title', text: 'Leaderboard' }));
+  view.appendChild(h('p', { class: 'page-sub', text: 'Addresses ranked by wins on resolved agreements (ties: fewer losses first). Computed on-chain by the contract.' }));
+  const box = h('div');
+  const out = h('div', { class: 'out' });
+  view.appendChild(box);
+  view.appendChild(out);
+  box.appendChild(h('div', { class: 'empty', text: 'Loading leaderboard…' }));
+  try {
+    const board = await readContract('get_leaderboard', [20]);
+    if (token !== routeToken) return;
+    clearChildren(box);
+    if (!board.items || !board.items.length) {
+      box.appendChild(h('div', { class: 'empty', text: 'No resolved agreements yet, so nobody is ranked.' }));
+      return;
+    }
+    const head = h('tr', {}, [
+      h('th', { text: '#' }), h('th', { text: 'Address' }),
+      h('th', { text: 'Wins' }), h('th', { text: 'Losses' }),
+      h('th', { class: 'hide-sm', text: 'Win rate' }),
+    ]);
+    const table = h('table', { class: 'board' }, [h('thead', {}, [head])]);
+    const body = h('tbody');
+    for (const it of board.items) {
+      const mine = account && sameAddr(it.address, account);
+      body.appendChild(h('tr', { class: mine ? 'me' : '' }, [
+        h('td', { class: 'rank', text: String(it.rank) }),
+        h('td', { class: 'addr' }, [h('a', { href: '#/profile/' + encodeURIComponent(it.address), text: shortAddr(it.address) + (mine ? ' (you)' : '') })]),
+        h('td', { class: 'num', text: String(it.wins) }),
+        h('td', { class: 'num', text: String(it.losses) }),
+        h('td', { class: 'num hide-sm', text: it.win_rate_percent + '%' }),
+      ]));
+    }
+    table.appendChild(body);
+    box.appendChild(table);
+    box.appendChild(h('p', { class: 'list-meta', text: `Showing top ${board.items.length} of ${board.total_ranked} ranked addresses` }));
+  } catch (err) {
+    if (token !== routeToken) return;
+    clearChildren(box);
+    showOut(out, 'Could not load the leaderboard: ' + (err?.message || String(err)) +
+      '\n\nThis page needs a contract version with get_leaderboard(). Check CONTRACT_ADDRESS.', 'err');
   }
 }
 
@@ -856,6 +912,59 @@ async function renderDetail(id){
     ]);
   }
 
+  if (a.status === 'resolved' && role !== 'none') {
+    const other = role === 'party_a' ? a.party_b : a.party_a;
+    const rf = {
+      teams: h('input', { type: 'text', placeholder: 'Real Madrid vs Barcelona' }),
+      matchDate: h('input', { type: 'text', placeholder: '2026-12-01' }),
+      threshold: h('input', { type: 'text', placeholder: '2.5' }),
+      comparison: h('select', null, [
+        h('option', { value: 'above', text: 'above (over)' }),
+        h('option', { value: 'below', text: 'below (under)' }),
+      ]),
+      deadline: h('input', { type: 'datetime-local' }),
+    };
+    rf.threshold.value = a.threshold_score || '';
+    rf.comparison.value = a.comparison === 'below' ? 'below' : 'above';
+    rf.deadline.value = defaultDeadlineLocalValue();
+    const rematchBtn = h('button', { class: 'primary', type: 'button', text: 'Propose rematch' });
+    rematchBtn.addEventListener('click', async () => {
+      const teams = rf.teams.value.trim();
+      const matchDate = rf.matchDate.value.trim();
+      const deadlineIso = localInputToIsoUtc(rf.deadline.value);
+      if (!teams.toLowerCase().includes(' vs ')) return showOut(actionOut, 'Enter teams as "Team A vs Team B".', 'err');
+      if (!matchDate) return showOut(actionOut, 'Enter the match date.', 'err');
+      if (!rf.threshold.value.trim()) return showOut(actionOut, 'Enter a threshold.', 'err');
+      if (!deadlineIso) return showOut(actionOut, 'Enter a valid resolution deadline.', 'err');
+      rematchBtn.disabled = true;
+      try {
+        const { txHash, value } = await sendTx('propose_rematch', [
+          id, teams, matchDate, rf.threshold.value.trim(), rf.comparison.value, deadlineIso,
+        ], actionOut);
+        invalidateLists();
+        if (value !== null && value !== undefined && value !== '') {
+          location.hash = '#/agreement/' + encodeURIComponent(String(value));
+        } else {
+          showOut(actionOut, `Finalized, but the new id could not be auto-detected. Tx: ${txHash}\nOpen "My agreements" to find it.`, 'ok');
+        }
+      } catch (err) {
+        if (err.message !== 'no-client') showOut(actionOut, errMessage(err), 'err');
+      } finally { rematchBtn.disabled = false; }
+    });
+    addAction('Propose a rematch',
+      `Start a new agreement against ${shortAddr(other)} with the same description and source domains. You become party A; they must accept.`, [
+        h('label', { text: 'Fixture (Team A vs Team B)' }), rf.teams,
+        h('label', { text: 'Match date' }), rf.matchDate,
+        h('div', { class: 'row2' }, [
+          h('div', null, [h('label', { text: 'Threshold (total goals)' }), rf.threshold]),
+          h('div', null, [h('label', { text: 'Comparison' }), rf.comparison]),
+        ]),
+        h('label', { text: 'Resolution deadline (local time)' }), rf.deadline,
+        h('p', { class: 'hint', text: 'Must be 2 hours – 7 days from now.' }),
+        rematchBtn,
+      ]);
+  }
+
   if (actionCount) {
     actions.appendChild(actionOut);
     body.appendChild(actions);
@@ -867,6 +976,7 @@ async function renderDetail(id){
     ['party_a', a.party_a], ['party_b', a.party_b], ['match_date', a.match_date],
     ['threshold_score', a.threshold_score], ['comparison', a.comparison],
     ['description', a.description],
+    ['rematch_of', a.rematch_of ? '#' + a.rematch_of : null],
     ['required_source_domains', (a.required_source_domains || []).join(', ')],
     ['locked_source_urls', (a.locked_source_urls || []).join(', ')],
     ['created_at', fmtTime(a.created_at)],
@@ -877,6 +987,11 @@ async function renderDetail(id){
     ['resolution_attempts', a.resolution_attempts],
   ];
   for (const [k, v] of rows) facts.appendChild(fieldRow(k, v));
+  if (a.rematch_of) {
+    facts.appendChild(h('div', { class: 'profile-links' }, [
+      h('a', { href: '#/agreement/' + encodeURIComponent(a.rematch_of), text: 'Rematch of agreement #' + a.rematch_of + ' →' }),
+    ]));
+  }
   facts.appendChild(h('div', { class: 'profile-links' }, [
     h('a', { href: '#/profile/' + encodeURIComponent(a.party_a), text: 'Party A profile →' }),
     h('a', { href: '#/profile/' + encodeURIComponent(a.party_b), text: 'Party B profile →' }),
@@ -906,7 +1021,7 @@ async function renderDetail(id){
 function renderTabs(active){
   const tabs = document.getElementById('tabs');
   clearChildren(tabs);
-  const items = [['explore', '#/', 'Explore'], ['create', '#/create', 'Create'], ['mine', '#/mine', 'My agreements'], ['profile', '#/profile', 'Profile']];
+  const items = [['explore', '#/', 'Explore'], ['create', '#/create', 'Create'], ['mine', '#/mine', 'My agreements'], ['leaderboard', '#/leaderboard', 'Leaderboard'], ['profile', '#/profile', 'Profile']];
   for (const [key, href, text] of items) {
     tabs.appendChild(h('a', { href, text, class: key === active ? 'active' : '' }));
   }
@@ -919,6 +1034,7 @@ function route(){
   window.scrollTo(0, 0);
 
   if (head === 'create') { renderTabs('create'); renderCreate(); return; }
+  if (head === 'leaderboard') { renderTabs('leaderboard'); renderLeaderboard(); return; }
   if (head === 'profile') {
     renderTabs('profile');
     renderProfile(parts[1] ? decodeURIComponent(parts[1]) : account);
